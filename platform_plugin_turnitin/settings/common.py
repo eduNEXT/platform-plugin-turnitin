@@ -5,6 +5,7 @@ https://docs.djangoproject.com/en/2.22/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.22/ref/settings/
 """
+from platform_plugin_turnitin import ROOT_DIRECTORY
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.22/howto/deployment/checklist/
@@ -81,3 +82,4 @@ def plugin_settings(settings):
     settings.PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND = (
         "platform_plugin_turnitin.edxapp_wrapper.backends.course_overviews_q_v1"
     )
+    settings.MAKO_TEMPLATE_DIRS_BASE.append(ROOT_DIRECTORY / "templates/turnitin")

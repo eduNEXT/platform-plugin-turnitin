@@ -1,6 +1,7 @@
 """
 Production Django settings for platform_plugin_turnitin project.
 """
+from platform_plugin_turnitin import ROOT_DIRECTORY
 
 
 def plugin_settings(settings):
@@ -49,3 +50,4 @@ def plugin_settings(settings):
         "PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND",
         settings.PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND,
     )
+    settings.MAKO_TEMPLATE_DIRS_BASE.append(ROOT_DIRECTORY / "templates/turnitin")
