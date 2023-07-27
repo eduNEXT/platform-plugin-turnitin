@@ -11,3 +11,13 @@ class PlatformPluginTurnitinConfig(AppConfig):
     """
 
     name = 'platform_plugin_turnitin'
+
+    plugin_app = {
+            "settings_config": {
+                "lms.djangoapp": {
+                    "common": {"relative_path": "settings.common"},
+                    "test": {"relative_path": "settings.test"},
+                    "production": {"relative_path": "settings.production"},
+                },
+        }
+    }
