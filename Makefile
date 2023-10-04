@@ -7,6 +7,10 @@
 # For opening files in a browser. Use like: $(BROWSER)relative/path/to/file.html
 BROWSER := python -m webbrowser file://$(CURDIR)/
 
+PACKAGE=platform_plugin_turnitin
+SOURCES=./setup.py ./$(PACKAGE)
+BLACK_OPTS = --exclude templates ${SOURCES}
+
 help: ## display this help message
 	@echo "Please use \`make <target>' where <target> is one of"
 	@awk -F ':.*?## ' '/^[a-zA-Z]/ && NF==2 {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
@@ -65,6 +69,10 @@ requirements: piptools ## install development environment requirements
 
 test: clean ## run tests in the current virtualenv
 	pytest
+
+format: ## Format code automatically
+	isort $(SOURCES)
+	black $(BLACK_OPTS)
 
 diff_cover: test ## find diff lines that need test coverage
 	diff-cover coverage.xml
