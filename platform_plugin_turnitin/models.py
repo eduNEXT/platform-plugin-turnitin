@@ -12,4 +12,4 @@ class TurnitinSubmission(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Submission by {self.user.username} - Turnitin ID: {self.turnitin_submission_id or 'Not Set'}"
+        return f"Submission: {self.turnitin_submission_id or 'Not Set'} - created at: {self.created_at}"

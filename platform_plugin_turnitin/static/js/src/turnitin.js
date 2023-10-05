@@ -32,11 +32,16 @@ function TurnitinXBlock(runtime, element) {
           type: "POST",
           url: handlerUrl,
           data: JSON.stringify({"hello": "world"}),
+
           success: function(response) {
-              showEULA(response);
+            if(response.status === 404) {
+                alert(`ERROR: ${response.status} - No EULA page for the given version was found`);
+            } else {
+                showEULA(response.html);
+            }
           },
           error: function() {
-              alert('Error al obtener el contenido del EULA.');
+              alert('Error getting EULA.');
           }
       });
   });
@@ -49,10 +54,16 @@ function TurnitinXBlock(runtime, element) {
           url: handlerUrl,
           data: JSON.stringify({"hello": "world"}),
           success: function(response) {
-              alert('EULA accepted!.');
+            if(response.success === false && (response.status === 400 || response.status === 404)) {
+                updateTrafficLightState('1', 'ERROR');
+                alert(`ERROR: ${response.status} - ${response.message}`);
+            } else {
+                alert('EULA successfully accepted!');
+            }
+              
           },
           error: function() {
-              alert('Error getting EULA content.');
+              alert('Error accepting EULA.');
           }
       });
   });
@@ -83,14 +94,15 @@ function TurnitinXBlock(runtime, element) {
           processData: false,
           contentType: false,
           success: function(response) {
-              if (response.success) {
-                  alert('Archivo subido con éxito a Turnitin.');
-              } else {
-                  alert('Hubo un error al subir el archivo a Turnitin.');
-              }
+            if(response.success === false && (response.status === 404 || response.status === 413 || response.status === 422 || response.status === 409)) {
+                alert(`ERROR: ${response.status} - ${response.message}`);
+            } else {
+                alert('File successfully uploaded to Turnitin!');
+            }
+              
           },
           error: function() {
-              alert('Error comunicándose con el servidor.');
+              alert('Error uploading file.');
           }
       });
   });
@@ -129,16 +141,22 @@ function TurnitinXBlock(runtime, element) {
       var handlerUrl = runtime.handlerUrl(element, 'get_submission_status');
 
       $.ajax({
-          type: "POST",
-          url: handlerUrl,
-          data: JSON.stringify({"hello": "world"}),
-          success: function(response) {
-              updateTrafficLightState('1', response['submission_status']);
-          },
-          error: function() {
-              alert('Error al obtener status de la entrega.');
+        type: "POST",
+        url: handlerUrl,
+        data: JSON.stringify({"hello": "world"}),
+        success: function(response) {
+          if(response.success === false && response.status === 404) {
+              updateTrafficLightState('1', 'ERROR');
+              alert(`ERROR: ${response.status} - ${response.message}`);
+          } else {
+              updateTrafficLightState('1', response['status']);
           }
-      });
+            
+        },
+        error: function() {
+            alert('Error getting report status.');
+        }
+    });
   });
 
 
@@ -172,7 +190,13 @@ function TurnitinXBlock(runtime, element) {
           url: handlerUrl,
           data: JSON.stringify({"hello": "world"}),
           success: function(response) {
-              updateTrafficLightState('2', response['report_status']);
+            if(response.success === false && response.status === 404) {
+                updateTrafficLightState('2', 'ERROR');
+                alert(`ERROR: ${response.status} - ${response.message}`);
+            } else {
+                updateTrafficLightState('2', response['status']);
+            }
+              
           },
           error: function() {
               alert('Error getting report status.');
@@ -211,6 +235,7 @@ function TurnitinXBlock(runtime, element) {
       const yellowLight = document.getElementById(`yellowLight${semaphoreNumber}`);
       const greenLight = document.getElementById(`greenLight${semaphoreNumber}`);
       const generateReportBtn = document.getElementById(`generateReportBtn${semaphoreNumber}`);
+      const statusText = document.getElementById(`statusText${semaphoreNumber}`);
       const refreshBtn2 = document.getElementById(`refreshBtn2`);
 
       redLight.classList.add('off');
@@ -218,21 +243,30 @@ function TurnitinXBlock(runtime, element) {
       greenLight.classList.add('off');
       generateReportBtn.disabled = true;
       generateReportBtn.classList.remove('enabled');
+      statusText.textContent = state;
+
+      statusText.classList.remove('red-text', 'yellow-text', 'green-text');
 
       switch (state) {
           case 'ERROR':
               redLight.classList.remove('off');
+              statusText.classList.add('red-text');
               break;
           case 'PROCESSING':
               yellowLight.classList.remove('off');
+              statusText.classList.add('yellow-text');
               break;
           case 'COMPLETE':
               greenLight.classList.remove('off');
+              statusText.classList.add('green-text');
               generateReportBtn.disabled = false;
               generateReportBtn.classList.add('enabled');
               refreshBtn2.disabled = false;
               refreshBtn2.classList.add('enabled');
               break;
+        default:
+            redLight.classList.remove('off');
+            statusText.classList.add('red-text');
       }
   }
 
