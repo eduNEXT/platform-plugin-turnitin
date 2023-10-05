@@ -9,16 +9,6 @@
 }
 
 
-
-body {
-    font-family: 'Arial', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #eef2f7;
-}
-
 /* Estilo base para todas las secciones */
 .turnitin-test-section {
     padding: 20px;
@@ -133,6 +123,25 @@ button {
 }
 
 /* CSS PARA STATUS*/
+.status-text {
+    font-size: 16px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.red-text {
+    color: red;
+}
+
+.yellow-text {
+    color: yellow;
+}
+
+.green-text {
+    color: green;
+}
+
+
 .traffic-light {
     width: 50px;
     height: 150px;

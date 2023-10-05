@@ -97,13 +97,15 @@ def get_eula_version_info(version: str = 'latest', language: str = 'EN'):
     response = turnitin_api_handler('get', f'eula/{version}?lang={language}')
     pretty_print_response(response)
 
+#TODO: done
 def get_eula_page(version: str = 'v1beta', language: str = 'en-US'):
     """
     Returns the HTML content for a specified EULA version.
     """
     response = turnitin_api_handler('get', f'/eula/{version}/view?lang={language}')
-    return response.text
+    return response
 
+#TODO: done
 def post_accept_eula_version(payload, version: str = 'v1beta'):
     """
     Accepts a specific EULA version.
@@ -111,6 +113,7 @@ def post_accept_eula_version(payload, version: str = 'v1beta'):
     """
     response = turnitin_api_handler('post', f'eula/{version}/accept', payload)
     pretty_print_response(response, 'ACCEPT EULA')
+    return response
 
 def get_eula_acceptance_by_user(user_id):
     """
@@ -142,6 +145,7 @@ def put_upload_submission_file_content(submission_id, file):
     pretty_print_response(response, 'UPLOAD FILE')
     return response
 
+#TODO: done
 def get_submission_info(submission_id):
     """
     Fetches all the information related to a specific submission.
@@ -155,7 +159,7 @@ def get_submission_info(submission_id):
     """
     response = turnitin_api_handler('get', f'submissions/{submission_id}')
     pretty_print_response(response, 'SUBMISSION STATUS')
-    return response.json()['status']
+    return response
 
 def delete_submission(submission_id, is_hard_delete='false'):
     """
@@ -185,6 +189,7 @@ def put_generate_similarity_report(submission_id, payload):
     pretty_print_response(response, 'REPORT GENERATION')
     return response
 
+#TODO: done
 def get_similarity_report_info(submission_id):
     """
     Returns summary information about the requested Similarity Report.
@@ -194,7 +199,7 @@ def get_similarity_report_info(submission_id):
     """
     response = turnitin_api_handler('get', f'submissions/{submission_id}/similarity')
     pretty_print_response(response, 'REPORT STATUS')
-    return response.json()['status']
+    return response
 
 def post_create_viewer_launch_url(submission_id, payload):
     """
