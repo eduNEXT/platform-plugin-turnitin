@@ -9,6 +9,7 @@ from xblock.fields import Integer, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 from django.contrib.auth.models import User
+from webob import Response
 from .models import TurnitinSubmission
 from platform_plugin_turnitin.turnitin_client.handlers import (get_eula_page,
                                     post_accept_eula_version,
@@ -168,8 +169,9 @@ class TurnitinXBlock(XBlock):
             myfile = data.params['myfile'].file
             #turnitin_submission_id='0a966646-83f9-4ce6-aa47-71e07baf4e30'
             response = put_upload_submission_file_content(turnitin_submission_id, myfile)
-            return response
-        return turnitin_submission
+            return Response(json.dumps(response.json()), content_type='application/json', charset='UTF-8')
+        
+        return Response(json.dumps(turnitin_submission.json()), content_type='application/json', charset='UTF-8')
 
     @XBlock.json_handler
     def get_submission_status(self, data, suffix=''):
@@ -179,7 +181,7 @@ class TurnitinXBlock(XBlock):
             last_submission = TurnitinSubmission.objects.filter(user=current_user).latest('created_at')
         except TurnitinSubmission.DoesNotExist:
             return {'success':False}
-        # last_submission = '0a966646-83f9-4ce6-aa47-71e07baf4e30'
+        # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         response = get_submission_info(last_submission.turnitin_submission_id)
         return response.json()
 
@@ -226,7 +228,7 @@ class TurnitinXBlock(XBlock):
             last_submission = TurnitinSubmission.objects.filter(user=current_user).latest('created_at')
         except TurnitinSubmission.DoesNotExist:
             {'success':False}
-        # last_submission = '0a966646-83f9-4ce6-aa47-71e07baf4e30'
+        # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         response = put_generate_similarity_report(last_submission.turnitin_submission_id, payload)
         if response.status_code == 202:
             return {'success':True}
@@ -240,7 +242,7 @@ class TurnitinXBlock(XBlock):
             last_submission = TurnitinSubmission.objects.filter(user=current_user).latest('created_at')
         except TurnitinSubmission.DoesNotExist:
             return {'success': False}
-        # last_submission = '0a966646-83f9-4ce6-aa47-71e07baf4e30'
+        # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         response = get_similarity_report_info(last_submission.turnitin_submission_id)
         return response.json()
 
@@ -281,7 +283,7 @@ class TurnitinXBlock(XBlock):
             last_submission = TurnitinSubmission.objects.filter(user=current_user).latest('created_at')
         except TurnitinSubmission.DoesNotExist:
             return {'success': False}
-        # last_submission = '0a966646-83f9-4ce6-aa47-71e07baf4e30'
+        # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         url = post_create_viewer_launch_url(last_submission.turnitin_submission_id, payload)
         return {'viewer_url': url}
 
