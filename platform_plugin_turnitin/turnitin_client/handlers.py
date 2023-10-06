@@ -29,10 +29,10 @@ def turnitin_api_handler(
     """
 
     # Configuration variables
-    TII_API_URL = getattr(settings, "TII_API_URL", None)
-    TCA_INTEGRATION_FAMILY = getattr(settings, "TCA_INTEGRATION_FAMILY", None)
-    TCA_INTEGRATION_VERSION = getattr(settings, "TCA_INTEGRATION_VERSION", None)
-    TCA_API_KEY = getattr(settings, "TCA_API_KEY", None)
+    TII_API_URL = getattr(settings, "TURNITIN_TII_API_URL", None)
+    TCA_INTEGRATION_FAMILY = getattr(settings, "TURNITIN_TCA_INTEGRATION_FAMILY", None)
+    TCA_INTEGRATION_VERSION = getattr(settings, "TURNITIN_TCA_INTEGRATION_VERSION", None)
+    TCA_API_KEY = getattr(settings, "TURNITIN_TCA_API_KEY", None)
 
     # Headers configuration
     headers = {

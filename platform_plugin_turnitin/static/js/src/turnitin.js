@@ -6,7 +6,7 @@ function TurnitinXBlock(runtime, element) {
   }
 
   function showEULA(htmlContent) {
-      $('#eulaModal .modal-content p').html(htmlContent); // Establece el contenido HTML en el párrafo del modal
+      $('#eulaModal .modal-content p').html(htmlContent);
       $('#eulaModal').show();
   }
 
@@ -68,17 +68,15 @@ function TurnitinXBlock(runtime, element) {
 
   $('.modal-content button').click(closeModal);
 
-  ////////////////////// UPLOAD FILE CSS
-
   $('#uploadBtn', element).click(function(event) {
-      event.preventDefault();  // Evitar que el formulario se envíe por defecto
+      event.preventDefault();
       var handlerUrl = runtime.handlerUrl(element, 'upload_turnitin_submission_file');
 
       var fileInput = $('#file')[0];
       var file = fileInput.files[0];
 
       if (!file) {
-          alert('Por favor, selecciona un archivo .doc o .docx primero.');
+          alert('Please select .doc or .docx files.');
           return;
       }
 
@@ -112,26 +110,22 @@ function TurnitinXBlock(runtime, element) {
       if (fileExtension === 'doc' || fileExtension === 'docx') {
           if (fileName) {
               $(this).siblings('.selected-filename').text(fileName);
-              $(this).siblings('label').addClass('file-selected').text('Cambiar archivo');
+              $(this).siblings('label').addClass('file-selected').text('Change File');
               uploadButton.prop('disabled', false);
           } else {
-              $(this).siblings('.selected-filename').text('Ningún archivo seleccionado');
-              $(this).siblings('label').removeClass('file-selected').text('Elegir archivo');
+              $(this).siblings('.selected-filename').text('No file selected');
+              $(this).siblings('label').removeClass('file-selected').text('Choose File');
               uploadButton.prop('disabled', true);
           }
       } else {
-          alert('Por favor, selecciona un archivo .doc o .docx');
+          alert('Please, select .doc or .docx files');
           $(this).val('');
-          $(this).siblings('.selected-filename').text('Ningún archivo seleccionado');
-          $(this).siblings('label').removeClass('file-selected').text('Elegir archivo');
+          $(this).siblings('.selected-filename').text('No file selected');
+          $(this).siblings('label').removeClass('file-selected').text('Choose File');
           uploadButton.prop('disabled', true);
       }
   }
   $('#file', element).on('change', updateSelectedFileName);
-
-
-
-//////////////////////////////////////////////////// SIMILARITY
 
   $('#refreshBtn1', element).click(function(event) {
       event.preventDefault();
@@ -154,7 +148,6 @@ function TurnitinXBlock(runtime, element) {
         }
     });
   });
-
 
 
   $('#generateReportBtn1', element).click(function(event) {

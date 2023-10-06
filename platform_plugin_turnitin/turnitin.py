@@ -96,12 +96,11 @@ class TurnitinXBlock(XBlock):
         """
         user_service = self.runtime.service(self, "user")
         current_user = user_service.get_current_user()
-        data = {
+        return {
             "user_id": current_user.opt_attrs["edx-platform.user_id"],
             "user_email": current_user.emails[0],
             "user_name": current_user.full_name.split(),
         }
-        return data
 
     @XBlock.json_handler
     def get_eula_agreement(self, data, suffix=""):

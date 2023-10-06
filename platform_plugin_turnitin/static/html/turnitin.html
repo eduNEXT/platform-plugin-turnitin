@@ -1,38 +1,34 @@
 <div class="turnitin_block">
 
-    <!-- Seccion para Modal EULA -->
     <section class="turnitin-test-section">
         <h2>EULA Viewer</h2>
         <button id="viewEULA">View EULA</button>
 
-        <!-- Modal con términos y condiciones -->
         <div class="modal" id="eulaModal">
             <div class="modal-content">
                 <h2>End User License Agreement (EULA)</h2>
-                <p>Acá irían los términos y condiciones...</p>
-                <button id="acceptEULA">Aceptar</button>
-                <button id="declineEULA">No Aceptar</button>
+                <p>Terms and Conditions</p>
+                <button id="acceptEULA">Accept</button>
+                <button id="declineEULA">Cancel</button>
             </div>
         </div>
     </section>
 
-    <!-- Seccion para FileUpload -->
     <section class="turnitin-test-section">
         <div class="file-upload-container">
             <h2>File Upload</h2>
             <form enctype="multipart/form-data">
                 <div class="file-upload">
                     <input type="file" name="myfile" id="file" accept=".doc, .docx">
-                    <label for="file">Elegir archivo</label>
-                    <span class="selected-filename">Ningún archivo seleccionado</span>
+                    <label for="file">Select File</label>
+                    <span class="selected-filename">No file selected</span>
                 </div>
-                <button type="submit" id="uploadBtn" disabled>Subir archivo</button>
+                <button type="submit" id="uploadBtn" disabled>Upload File</button>
             </form>
         </div>
     </section>
 
 
-    <!-- Primer semáforo -->
     <section class="turnitin-test-section">
         <h2>File Processing Status</h2>
         <div class="traffic-light">
@@ -45,7 +41,6 @@
         <button id="generateReportBtn1" class="generate-btn" disabled>Generate Similarity Report</button>
     </section>
 
-    <!-- Segundo semáforo -->
     <section class="turnitin-test-section">
         <h2>Similarity Processing Status</h2>
         <div class="traffic-light">
@@ -58,13 +53,11 @@
         <button id="generateReportBtn2" class="generate-btn" disabled>Launch Viewer</button>
     </section>
 
-
-    <!-- Seccion para Text Upload -->
-    <section class="turnitin-test-section">
+    <!-- <section class="turnitin-test-section">
         <h2>Text to File</h2>
         <div style="padding: 20px;">
             <textarea id="textsubmission"></textarea>
             <br><br>
             <button id="sendtextsubmission">Enviar asignatura</button>
         </div>
-    </section>
+    </section> -->
