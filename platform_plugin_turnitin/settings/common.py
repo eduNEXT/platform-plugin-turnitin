@@ -37,7 +37,7 @@ def plugin_settings(settings):  # pylint: disable=unused-argument
     """
 
     # Configuration variables
-    settings.TII_API_URL = "https://edunext.tii-sandbox.com"
-    settings.TCA_INTEGRATION_FAMILY = "MySweetLMS"
-    settings.TCA_INTEGRATION_VERSION = "3.2.4"
-    settings.TCA_API_KEY = "[SECRET_KEY_HERE]"
+    settings.TURNITIN_TII_API_URL = None
+    settings.TURNITIN_TCA_INTEGRATION_FAMILY = None
+    settings.TURNITIN_TCA_INTEGRATION_VERSION = None
+    settings.TURNITIN_TCA_API_KEY = None
