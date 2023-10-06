@@ -35,3 +35,9 @@ def plugin_settings(settings):  # pylint: disable=unused-argument
     Set of plugin settings used by the Open Edx platform.
     More info: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
+
+    # Configuration variables
+    settings.TII_API_URL = "https://edunext.tii-sandbox.com"
+    settings.TCA_INTEGRATION_FAMILY = "MySweetLMS"
+    settings.TCA_INTEGRATION_VERSION = "3.2.4"
+    settings.TCA_API_KEY = "[SECRET_KEY_HERE]"
