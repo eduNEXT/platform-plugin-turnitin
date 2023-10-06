@@ -34,7 +34,7 @@ function TurnitinXBlock(runtime, element) {
           data: JSON.stringify({"hello": "world"}),
 
           success: function(response) {
-            if(response.status === 404) {
+            if(response.status >= 400) {
                 alert(`ERROR: ${response.status} - No EULA page for the given version was found`);
             } else {
                 showEULA(response.html);
@@ -54,13 +54,11 @@ function TurnitinXBlock(runtime, element) {
           url: handlerUrl,
           data: JSON.stringify({"hello": "world"}),
           success: function(response) {
-            if(response.success === false && (response.status === 400 || response.status === 404)) {
-                updateTrafficLightState('1', 'ERROR');
+            if(response.success === false && response.status >= 400) {
                 alert(`ERROR: ${response.status} - ${response.message}`);
             } else {
                 alert('EULA successfully accepted!');
             }
-              
           },
           error: function() {
               alert('Error accepting EULA.');
@@ -94,12 +92,11 @@ function TurnitinXBlock(runtime, element) {
           processData: false,
           contentType: false,
           success: function(response) {
-            if(response.success === false && (response.status === 404 || response.status === 413 || response.status === 422 || response.status === 409)) {
+            if(response.success === false && response.status >= 400) {
                 alert(`ERROR: ${response.status} - ${response.message}`);
             } else {
                 alert('File successfully uploaded to Turnitin!');
             }
-              
           },
           error: function() {
               alert('Error uploading file.');
@@ -145,13 +142,12 @@ function TurnitinXBlock(runtime, element) {
         url: handlerUrl,
         data: JSON.stringify({"hello": "world"}),
         success: function(response) {
-          if(response.success === false && response.status === 404) {
+          if(response.success === false && response.status >= 400) {
               updateTrafficLightState('1', 'ERROR');
               alert(`ERROR: ${response.status} - ${response.message}`);
           } else {
               updateTrafficLightState('1', response['status']);
           }
-            
         },
         error: function() {
             alert('Error getting report status.');
@@ -170,7 +166,11 @@ function TurnitinXBlock(runtime, element) {
           url: handlerUrl,
           data: JSON.stringify({"hello": "world"}),
           success: function(response) {
-              alert('Successfully scheduled similarity report generation.');
+            if(response.success === false && response.status >= 400) {
+                alert(`ERROR: ${response.status} - ${response.message}`);
+            } else {
+                alert('Successfully scheduled similarity report generation.');
+            }
           },
           error: function() {
               alert('Error in similarity report generation.');
@@ -190,13 +190,12 @@ function TurnitinXBlock(runtime, element) {
           url: handlerUrl,
           data: JSON.stringify({"hello": "world"}),
           success: function(response) {
-            if(response.success === false && response.status === 404) {
+            if(response.success === false && response.status >= 400) {
                 updateTrafficLightState('2', 'ERROR');
                 alert(`ERROR: ${response.status} - ${response.message}`);
             } else {
                 updateTrafficLightState('2', response['status']);
             }
-              
           },
           error: function() {
               alert('Error getting report status.');
@@ -214,8 +213,12 @@ function TurnitinXBlock(runtime, element) {
           url: handlerUrl,
           data: JSON.stringify({"hello": "world"}),
           success: function(response) {
-              alert('Redirecting...');
-              openInNewTab(response['viewer_url']);
+              if(response.success === false && response.status >= 400) {
+                alert(`ERROR: ${response.status} - ${response.message}`);
+            } else {
+                alert('Redirecting...');
+                openInNewTab(response.viewer_url);
+            }
           },
           error: function() {
               alert('Error getting Viewer URL.');

@@ -31,11 +31,6 @@ class TurnitinXBlock(XBlock):
     # Fields are defined on the class.  You can access them in your code as
     # self.<fieldname>.
 
-    # TO-DO: delete count, and define your own fields.
-    count = Integer(
-        default=0, scope=Scope.user_state,
-        help="A simple counter, to show something happening",
-    )
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
@@ -82,36 +77,51 @@ class TurnitinXBlock(XBlock):
         frag.add_javascript(self.resource_string("static/js/src/turnitin.js"))
         frag.initialize_js('TurnitinXBlock')
         return frag
-
-    # TO-DO: change this handler to perform your own actions.  You may need more
-    # than one handler, or you may not need any handlers at all.
-    @XBlock.json_handler
-    def increment_count(self, data, suffix=''):
+    # ----------------------------------------------------------------------------
+    def get_user_data(self):
         """
-        An example handler, which increments the data.
+        Fetches user-related data, including user ID, email, and name.
+
+        Returns:
+            dict: A dictionary containing user ID, email, and name.
         """
-        if suffix:
-            pass  # TO-DO: Use the suffix when storing data.
-        # Just to show data coming in...
-        assert data['hello'] == 'world'
-
-        self.count += 1
-        return {"count": self.count}
-
-
-
-
-
+        user_service = self.runtime.service(self, 'user')
+        current_user = user_service.get_current_user()
+        data = {
+        "user_id" : current_user.opt_attrs['edx-platform.user_id'],
+        "user_email" : current_user.emails[0],
+        "user_name" : current_user.full_name.split(),
+        }
+        return data
 
     @XBlock.json_handler
     def get_eula_agreement(self, data, suffix=''):
+        """
+        Fetches the End User License Agreement (EULA) content.
+
+        Args:
+            data (dict): Input data for the request.
+            suffix (str, optional): Additional suffix for the request. Defaults to ''.
+
+        Returns:
+            dict: A dictionary containing the HTML content of the EULA and the status code.
+        """
         response = get_eula_page()
         return {'html': response.text, 'status':response.status_code}
 
     @XBlock.json_handler
     def accept_eula_agreement(self, data, suffix=''):
-        user_service = self.runtime.service(self, 'user')
-        user_id = user_service.get_current_user().opt_attrs['edx-platform.user_id']
+        """
+        Submits acceptance of the EULA for the current user.
+
+        Args:
+            data (dict): Input data for the request.
+            suffix (str, optional): Additional suffix for the request. Defaults to ''.
+
+        Returns:
+            dict: The response after accepting the EULA.
+        """
+        user_id = self.get_user_data()['user_id']
         date_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
         payload = {
             "user_id": str(user_id), "accepted_timestamp": date_now, "language": "en-US"
@@ -120,33 +130,37 @@ class TurnitinXBlock(XBlock):
         return response.json()
 
     def create_turnitin_submission_object(self):
-        current_user = self.runtime.service(self, 'user').get_current_user()
-        user_email = current_user.emails[0]
-        user_name = current_user.full_name.split()
-        user_id = current_user.opt_attrs['edx-platform.user_id']
+        """
+        Constructs a Turnitin submission object based on the user's data.
+
+        Returns:
+            Response: The response from the Turnitin submission API.
+        """
+        user_data = self.get_user_data()
+        user_name = user_data['user_name']
         date_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 
         payload={
-        "owner": user_id,
+        "owner": user_data['user_id'],
         "title": self.location.block_id,
-        "submitter": user_id,
+        "submitter": user_data['user_id'],
         "owner_default_permission_set": "LEARNER",
         "submitter_default_permission_set": "INSTRUCTOR",
         "extract_text_only": False,
         "metadata": {
           "owners": [
             {
-              "id": user_id,
+              "id": user_data['user_id'],
               "given_name": user_name[0] if user_name else "no_name",
               "family_name": ' '.join(user_name[1:]) if len(user_name) > 1 else "no_last_name",
-              "email": user_email
+              "email": user_data['user_email']
             }
             ],
           "submitter": {
-            "id": user_id,
+            "id": user_data['user_id'],
             "given_name": user_name[0] if user_name else "no_name",
             "family_name": ' '.join(user_name[1:]) if len(user_name) > 1 else "no_last_name",
-            "email": user_email
+            "email": user_data['user_email']
             },
 
           "original_submitted_time": date_now,
@@ -156,26 +170,42 @@ class TurnitinXBlock(XBlock):
 
     @XBlock.handler
     def upload_turnitin_submission_file(self, data, suffix=''):
+        """
+        Handles the upload of the user's file to Turnitin.
+
+        Args:
+            data (WebRequest): Web request containing the file to be uploaded.
+            suffix (str, optional): Additional suffix for the request. Defaults to ''.
+
+        Returns:
+            Response: The response after uploading the file to Turnitin.
+        """
         turnitin_submission = self.create_turnitin_submission_object()
         if turnitin_submission.status_code == 201:
             turnitin_submission_id = turnitin_submission.json()['id']
-            current_user_id = self.runtime.service(self, 'user').get_current_user().opt_attrs['edx-platform.user_id']
+            current_user_id = self.get_user_data()['user_id']
             current_user = User.objects.get(id=current_user_id)
             submission = TurnitinSubmission(user = current_user, turnitin_submission_id=turnitin_submission_id)
             submission.save()
-            print('\n\n')
-            print('SUBMISSION CREATED<<<<<<<<<<<<<<<', submission)
-            print('\n\n')
             myfile = data.params['myfile'].file
             #turnitin_submission_id='0a966646-83f9-4ce6-aa47-71e07baf4e30'
             response = put_upload_submission_file_content(turnitin_submission_id, myfile)
             return Response(json.dumps(response.json()), content_type='application/json', charset='UTF-8')
-        
         return Response(json.dumps(turnitin_submission.json()), content_type='application/json', charset='UTF-8')
 
     @XBlock.json_handler
     def get_submission_status(self, data, suffix=''):
-        current_user_id = self.runtime.service(self, 'user').get_current_user().opt_attrs['edx-platform.user_id']
+        """
+        Retrieves the status of the latest Turnitin submission for the user.
+
+        Args:
+            data (dict): Input data for the request.
+            suffix (str, optional): Additional suffix for the request. Defaults to ''.
+
+        Returns:
+            dict: Information related to the user's latest Turnitin submission.
+        """
+        current_user_id = self.get_user_data()['user_id']
         current_user = User.objects.get(id=current_user_id)
         try:
             last_submission = TurnitinSubmission.objects.filter(user=current_user).latest('created_at')
@@ -187,6 +217,17 @@ class TurnitinXBlock(XBlock):
 
     @XBlock.json_handler
     def generate_similarity_report(self, data, suffix=''):
+        """
+        Initiates the generation of a similarity report for the user's latest Turnitin submission.
+
+        Args:
+            data (dict): Input data for the request.
+            suffix (str, optional): Additional suffix for the request. Defaults to ''.
+
+        Returns:
+            dict: The status of the similarity report generation process.
+        """
+
         payload = {
         "indexing_settings": {
             "add_to_index": True
@@ -222,21 +263,29 @@ class TurnitinXBlock(XBlock):
             "exclude_submitted_works": False
         }
         }
-        current_user_id = self.runtime.service(self, 'user').get_current_user().opt_attrs['edx-platform.user_id']
+        current_user_id = self.get_user_data()['user_id']
         current_user = User.objects.get(id=current_user_id)
         try:
             last_submission = TurnitinSubmission.objects.filter(user=current_user).latest('created_at')
         except TurnitinSubmission.DoesNotExist:
-            {'success':False}
+            return {'success':False}
         # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         response = put_generate_similarity_report(last_submission.turnitin_submission_id, payload)
-        if response.status_code == 202:
-            return {'success':True}
-        return {'success':False}
+        return response.json()
 
     @XBlock.json_handler
     def get_similarity_report_status(self, data, suffix=''):
-        current_user_id = self.runtime.service(self, 'user').get_current_user().opt_attrs['edx-platform.user_id']
+        """
+        Retrieves the status of the similarity report for the user's latest Turnitin submission.
+
+        Args:
+            data (dict): Input data for the request.
+            suffix (str, optional): Additional suffix for the request. Defaults to ''.
+
+        Returns:
+            dict: Information related to the status of the similarity report.
+        """
+        current_user_id = self.get_user_data()['user_id']
         current_user = User.objects.get(id=current_user_id)
         try:
             last_submission = TurnitinSubmission.objects.filter(user=current_user).latest('created_at')
@@ -248,11 +297,20 @@ class TurnitinXBlock(XBlock):
 
     @XBlock.json_handler
     def create_similarity_viewer(self, data, suffix=''):
-        current_user = self.runtime.service(self, 'user').get_current_user()
-        user_name = current_user.full_name.split()
-        user_id = current_user.opt_attrs['edx-platform.user_id']
+        """
+        Creates a Turnitin similarity viewer for the user's latest submission.
+
+        Args:
+            data (dict): Input data for the request.
+            suffix (str, optional): Additional suffix for the request. Defaults to ''.
+
+        Returns:
+            dict: Contains the URL for the similarity viewer.
+        """
+        user_data = self.get_user_data()
+        user_name = user_data['user_name']
         payload = {
-        "viewer_user_id": user_id,
+        "viewer_user_id": user_data['user_id'],
         "locale": "en-EN",
         "viewer_default_permission_set": "INSTRUCTOR",
         "viewer_permissions": {
@@ -278,19 +336,15 @@ class TurnitinXBlock(XBlock):
           "default_mode": "similarity"
         }
       }
-        current_user = User.objects.get(id=user_id)
+        current_user = User.objects.get(id=user_data['user_id'])
         try:
             last_submission = TurnitinSubmission.objects.filter(user=current_user).latest('created_at')
         except TurnitinSubmission.DoesNotExist:
             return {'success': False}
         # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
-        url = post_create_viewer_launch_url(last_submission.turnitin_submission_id, payload)
-        return {'viewer_url': url}
-
-
-
-
-
+        response = post_create_viewer_launch_url(last_submission.turnitin_submission_id, payload)
+        return response.json()
+    # ----------------------------------------------------------------------------
 
     # TO-DO: change this to create the scenarios you'd like to see in the
     # workbench while developing your XBlock.
