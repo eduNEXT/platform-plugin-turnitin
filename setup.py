@@ -150,8 +150,8 @@ setup(
         "lms.djangoapp": [
             "platform_plugin_turnitin = platform_plugin_turnitin.apps:PlatformPluginTurnitinConfig"
         ],
-        'xblock.v1': [
-            'turnitin = platform_plugin_turnitin.turnitin:TurnitinXBlock',
+        "xblock.v1": [
+            "turnitin = platform_plugin_turnitin.turnitin:TurnitinXBlock",
         ],
     },
 )
