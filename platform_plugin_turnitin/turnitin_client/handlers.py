@@ -66,6 +66,7 @@ def turnitin_api_handler(request_method: str, url_prefix: str = '', data: Option
 
 
 def pretty_print_response(response, type_of=''):
+    """debug helper function"""
     content = response.json()
     print('\n\n')
     print(f'------{type_of}------')
@@ -97,7 +98,6 @@ def get_eula_version_info(version: str = 'latest', language: str = 'EN'):
     response = turnitin_api_handler('get', f'eula/{version}?lang={language}')
     pretty_print_response(response)
 
-#TODO: done
 def get_eula_page(version: str = 'v1beta', language: str = 'en-US'):
     """
     Returns the HTML content for a specified EULA version.
@@ -105,7 +105,6 @@ def get_eula_page(version: str = 'v1beta', language: str = 'en-US'):
     response = turnitin_api_handler('get', f'/eula/{version}/view?lang={language}')
     return response
 
-#TODO: done
 def post_accept_eula_version(payload, version: str = 'v1beta'):
     """
     Accepts a specific EULA version.
@@ -145,7 +144,6 @@ def put_upload_submission_file_content(submission_id, file):
     pretty_print_response(response, 'UPLOAD FILE')
     return response
 
-#TODO: done
 def get_submission_info(submission_id):
     """
     Fetches all the information related to a specific submission.
@@ -189,7 +187,6 @@ def put_generate_similarity_report(submission_id, payload):
     pretty_print_response(response, 'REPORT GENERATION')
     return response
 
-#TODO: done
 def get_similarity_report_info(submission_id):
     """
     Returns summary information about the requested Similarity Report.
@@ -209,7 +206,7 @@ def post_create_viewer_launch_url(submission_id, payload):
     """
     response = turnitin_api_handler('post', f'submissions/{submission_id}/viewer-url',payload)
     pretty_print_response(response, 'URL VIEWER')
-    return response.json()['viewer_url']
+    return response
 
 def post_generate_similarity_report_pdf(submission_id):
     """
