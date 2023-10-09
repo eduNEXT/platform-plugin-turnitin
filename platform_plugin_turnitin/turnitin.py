@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime
+from http import HTTPStatus
 
 import pkg_resources
 from django.contrib.auth.models import User
@@ -96,10 +97,14 @@ class TurnitinXBlock(XBlock):
         """
         user_service = self.runtime.service(self, "user")
         current_user = user_service.get_current_user()
+        user_full_name = current_user.full_name.split()
         return {
             "user_id": current_user.opt_attrs["edx-platform.user_id"],
             "user_email": current_user.emails[0],
-            "user_name": current_user.full_name.split(),
+            "user_name": user_full_name[0] if user_full_name else "no_name",
+            "user_last_name": " ".join(user_full_name[1:])
+            if len(user_full_name) > 1
+            else "no_last_name",
         }
 
     @XBlock.json_handler
@@ -147,7 +152,6 @@ class TurnitinXBlock(XBlock):
             Response: The response from the Turnitin submission API.
         """
         user_data = self.get_user_data()
-        user_name = user_data["user_name"]
         date_now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
         payload = {
@@ -161,19 +165,15 @@ class TurnitinXBlock(XBlock):
                 "owners": [
                     {
                         "id": user_data["user_id"],
-                        "given_name": user_name[0] if user_name else "no_name",
-                        "family_name": " ".join(user_name[1:])
-                        if len(user_name) > 1
-                        else "no_last_name",
+                        "given_name": user_data["user_name"],
+                        "family_name": user_data["user_last_name"],
                         "email": user_data["user_email"],
                     }
                 ],
                 "submitter": {
                     "id": user_data["user_id"],
-                    "given_name": user_name[0] if user_name else "no_name",
-                    "family_name": " ".join(user_name[1:])
-                    if len(user_name) > 1
-                    else "no_last_name",
+                    "given_name": user_data["user_name"],
+                    "family_name": user_data["user_last_name"],
                     "email": user_data["user_email"],
                 },
                 "original_submitted_time": date_now,
@@ -194,7 +194,7 @@ class TurnitinXBlock(XBlock):
             Response: The response after uploading the file to Turnitin.
         """
         turnitin_submission = self.create_turnitin_submission_object()
-        if turnitin_submission.status_code == 201:
+        if turnitin_submission.status_code == HTTPStatus.CREATED:
             turnitin_submission_id = turnitin_submission.json()["id"]
             current_user_id = self.get_user_data()["user_id"]
             current_user = User.objects.get(id=current_user_id)
@@ -202,10 +202,9 @@ class TurnitinXBlock(XBlock):
                 user=current_user, turnitin_submission_id=turnitin_submission_id
             )
             submission.save()
-            myfile = data.params["myfile"].file
-            # turnitin_submission_id='0a966646-83f9-4ce6-aa47-71e07baf4e30'
+            uploaded_file = data.params["uploaded_file"].file
             response = put_upload_submission_file_content(
-                turnitin_submission_id, myfile
+                turnitin_submission_id, uploaded_file
             )
             return Response(
                 json.dumps(response.json()),
@@ -238,7 +237,6 @@ class TurnitinXBlock(XBlock):
             ).latest("created_at")
         except TurnitinSubmission.DoesNotExist:
             return {"success": False}
-        # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         response = get_submission_info(last_submission.turnitin_submission_id)
         return response.json()
 
@@ -296,7 +294,6 @@ class TurnitinXBlock(XBlock):
             ).latest("created_at")
         except TurnitinSubmission.DoesNotExist:
             return {"success": False}
-        # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         response = put_generate_similarity_report(
             last_submission.turnitin_submission_id, payload
         )
@@ -322,7 +319,6 @@ class TurnitinXBlock(XBlock):
             ).latest("created_at")
         except TurnitinSubmission.DoesNotExist:
             return {"success": False}
-        # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         response = get_similarity_report_info(last_submission.turnitin_submission_id)
         return response.json()
 
@@ -355,10 +351,8 @@ class TurnitinXBlock(XBlock):
                 "view_settings": {"save_changes": True},
             },
             "author_metadata_override": {
-                "family_name": " ".join(user_name[1:])
-                if len(user_name) > 1
-                else "no_last_name",
-                "given_name": user_name[0] if user_name else "no_name",
+                "family_name": user_data["user_last_name"],
+                "given_name": user_data["user_name"],
             },
             "sidebar": {"default_mode": "similarity"},
         }
@@ -369,7 +363,6 @@ class TurnitinXBlock(XBlock):
             ).latest("created_at")
         except TurnitinSubmission.DoesNotExist:
             return {"success": False}
-        # last_submission = 'de6784c5-471f-4220-aff1-16b6b44dffcf'
         response = post_create_viewer_launch_url(
             last_submission.turnitin_submission_id, payload
         )
