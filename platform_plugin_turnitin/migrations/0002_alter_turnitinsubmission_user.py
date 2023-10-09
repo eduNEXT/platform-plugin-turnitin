@@ -6,16 +6,19 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('platform_plugin_turnitin', '0001_initial'),
+        ("platform_plugin_turnitin", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='turnitinsubmission',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='turnitin_submissions', to=settings.AUTH_USER_MODEL),
+            model_name="turnitinsubmission",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="turnitin_submissions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

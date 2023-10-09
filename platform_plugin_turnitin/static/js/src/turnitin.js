@@ -81,7 +81,7 @@ function TurnitinXBlock(runtime, element) {
       }
 
       var formData = new FormData();
-      formData.append('myfile', file);
+      formData.append('uploaded_file', file);
 
       $.ajax({
           type: 'POST',

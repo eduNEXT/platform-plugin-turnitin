@@ -7,6 +7,7 @@ from django.db import models
 
 User = get_user_model()
 
+
 class TurnitinSubmission(models.Model):
     """
     Represents a submission to Turnitin.
@@ -20,7 +21,10 @@ class TurnitinSubmission(models.Model):
     Methods:
     - __str__: Returns a string representation of the submission, showing its ID and creation date.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="turnitin_submissions")
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="turnitin_submissions"
+    )
     turnitin_submission_id = models.CharField(max_length=255, blank=True, null=True)
     turnitin_submission_pdf_id = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
