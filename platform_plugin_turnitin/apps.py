@@ -32,4 +32,6 @@ class PlatformPluginTurnitinConfig(AppConfig):
         Perform application initialization once the Django platform has been initialized.
         """
         super().ready()
-        from platform_plugin_turnitin.turnitin import TurnitinXBlock
+        from platform_plugin_turnitin.turnitin import (  # no-qa pylint: disable=import-outside-toplevel,unused-import
+            TurnitinXBlock,
+        )

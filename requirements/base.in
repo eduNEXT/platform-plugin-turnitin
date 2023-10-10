@@ -4,3 +4,4 @@
 Django             # Web application framework
 xblock
 xblock-utils
+requests

@@ -1,5 +1,7 @@
+"""
+EULA handlers for turnitin xblock
+"""
 from .api_handler import turnitin_api_handler
-from .utils import pretty_print_response
 
 
 def get_eula_version_info(version: str = "latest", language: str = "EN"):
@@ -9,7 +11,7 @@ def get_eula_version_info(version: str = "latest", language: str = "EN"):
     have to accept in order to send a file to Turnitin.
     """
     response = turnitin_api_handler("get", f"eula/{version}?lang={language}")
-    pretty_print_response(response)
+    return response
 
 
 def get_eula_page(version: str = "v1beta", language: str = "en-US"):
@@ -26,7 +28,6 @@ def post_accept_eula_version(payload, version: str = "v1beta"):
     This method should be invoked after the user has viewed the EULA content.
     """
     response = turnitin_api_handler("post", f"eula/{version}/accept", payload)
-    pretty_print_response(response, "ACCEPT EULA")
     return response
 
 
@@ -35,4 +36,4 @@ def get_eula_acceptance_by_user(user_id):
     Checks if a specific user has accepted a particular EULA version.
     """
     response = turnitin_api_handler("get", f"eula/v1beta/accept/{user_id}")
-    pretty_print_response(response)
+    return response

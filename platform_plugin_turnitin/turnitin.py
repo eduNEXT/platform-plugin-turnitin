@@ -5,14 +5,15 @@ from datetime import datetime
 from http import HTTPStatus
 
 import pkg_resources
-from django.contrib.auth.models import User
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils import translation
 from webob import Response
 from xblock.core import XBlock
-from xblock.fields import Integer, Scope
 from xblock.fragment import Fragment
 from xblockutils.resources import ResourceLoader
 
+from platform_plugin_turnitin.models import TurnitinSubmission
 from platform_plugin_turnitin.turnitin_client.handlers import (
     get_eula_page,
     get_similarity_report_info,
@@ -24,7 +25,7 @@ from platform_plugin_turnitin.turnitin_client.handlers import (
     put_upload_submission_file_content,
 )
 
-from .models import TurnitinSubmission
+User = get_user_model()
 
 
 @XBlock.needs("user")
@@ -44,8 +45,7 @@ class TurnitinXBlock(XBlock):
 
     def studio_view(self, context=None):
         """
-        The primary view of the TurnitinXBlock, shown to students
-        when viewing courses.
+        Show primary view of the TurnitinXBlock, shown to students when viewing courses.
         """
         if context:
             pass  # TO-DO: do something based on the context.
@@ -67,8 +67,7 @@ class TurnitinXBlock(XBlock):
     # TO-DO: change this view to display your data your own way.
     def student_view(self, context=None):
         """
-        The primary view of the TurnitinXBlock, shown to students
-        when viewing courses.
+        Show primary view of the TurnitinXBlock, shown to students when viewing courses.
         """
         if context:
             pass  # TO-DO: do something based on the context.
@@ -87,10 +86,9 @@ class TurnitinXBlock(XBlock):
         frag.initialize_js("TurnitinXBlock")
         return frag
 
-    # ----------------------------------------------------------------------------
     def get_user_data(self):
         """
-        Fetches user-related data, including user ID, email, and name.
+        Fetch user-related data, including user ID, email, and name.
 
         Returns:
             dict: A dictionary containing user ID, email, and name.
@@ -109,15 +107,15 @@ class TurnitinXBlock(XBlock):
 
     def get_django_user(self):
         """
-        Returns the django user.
+        Return the django user.
         """
         current_user_id = self.get_user_data()["user_id"]
         return User.objects.get(id=current_user_id)
 
     @XBlock.json_handler
-    def get_eula_agreement(self, data, suffix=""):
+    def get_eula_agreement(self, data, suffix=""):  # pylint: disable=unused-argument
         """
-        Fetches the End User License Agreement (EULA) content.
+        Fetch the End User License Agreement (EULA) content.
 
         Args:
             data (dict): Input data for the request.
@@ -130,9 +128,9 @@ class TurnitinXBlock(XBlock):
         return {"html": response.text, "status": response.status_code}
 
     @XBlock.json_handler
-    def accept_eula_agreement(self, data, suffix=""):
+    def accept_eula_agreement(self, data, suffix=""):  # pylint: disable=unused-argument
         """
-        Submits acceptance of the EULA for the current user.
+        Submit acceptance of the EULA for the current user.
 
         Args:
             data (dict): Input data for the request.
@@ -153,7 +151,7 @@ class TurnitinXBlock(XBlock):
 
     def create_turnitin_submission_object(self):
         """
-        Constructs a Turnitin submission object based on the user's data.
+        Create a Turnitin submission object based on the user's data.
 
         Returns:
             Response: The response from the Turnitin submission API.
@@ -163,7 +161,7 @@ class TurnitinXBlock(XBlock):
 
         payload = {
             "owner": user_data["user_id"],
-            "title": self.location.block_id,
+            "title": self.location.block_id,  # pylint: disable=no-member
             "submitter": user_data["user_id"],
             "owner_default_permission_set": "LEARNER",
             "submitter_default_permission_set": "INSTRUCTOR",
@@ -189,9 +187,11 @@ class TurnitinXBlock(XBlock):
         return post_create_submission(payload)
 
     @XBlock.handler
-    def upload_turnitin_submission_file(self, data, suffix=""):
+    def upload_turnitin_submission_file(
+        self, data, suffix=""
+    ):  # pylint: disable=unused-argument
         """
-        Handles the upload of the user's file to Turnitin.
+        Handle the upload of the user's file to Turnitin.
 
         Args:
             data (WebRequest): Web request containing the file to be uploaded.
@@ -220,9 +220,9 @@ class TurnitinXBlock(XBlock):
         )
 
     @XBlock.json_handler
-    def get_submission_status(self, data, suffix=""):
+    def get_submission_status(self, data, suffix=""):  # pylint: disable=unused-argument
         """
-        Retrieves the status of the latest Turnitin submission for the user.
+        Retrieve the status of the latest Turnitin submission for the user.
 
         Args:
             data (dict): Input data for the request.
@@ -242,9 +242,11 @@ class TurnitinXBlock(XBlock):
         return response.json()
 
     @XBlock.json_handler
-    def generate_similarity_report(self, data, suffix=""):
+    def generate_similarity_report(
+        self, data, suffix=""
+    ):  # pylint: disable=unused-argument
         """
-        Initiates the generation of a similarity report for the user's latest Turnitin submission.
+        Initialize the generation of a similarity report for the user's latest Turnitin submission.
 
         Args:
             data (dict): Input data for the request.
@@ -253,40 +255,7 @@ class TurnitinXBlock(XBlock):
         Returns:
             dict: The status of the similarity report generation process.
         """
-
-        payload = {
-            "indexing_settings": {"add_to_index": True},
-            "generation_settings": {
-                "search_repositories": [
-                    "INTERNET",
-                    "SUBMITTED_WORK",
-                    "PUBLICATION",
-                    "CROSSREF",
-                    "CROSSREF_POSTED_CONTENT",
-                ],
-                "submission_auto_excludes": [
-                    "b84b77d1-da0f-4f45-b002-8aec4f4796d6",
-                    "b86de142-bc44-4f95-8467-84af12b89217",
-                ],
-                "auto_exclude_self_matching_scope": "ALL",
-                "priority": "HIGH",
-            },
-            "view_settings": {
-                "exclude_quotes": True,
-                "exclude_bibliography": True,
-                "exclude_citations": False,
-                "exclude_abstract": False,
-                "exclude_methods": False,
-                "exclude_custom_sections": False,
-                "exclude_preprints": False,
-                "exclude_small_matches": 8,
-                "exclude_internet": False,
-                "exclude_publications": False,
-                "exclude_crossref": False,
-                "exclude_crossref_posted_content": False,
-                "exclude_submitted_works": False,
-            },
-        }
+        payload = getattr(settings, "TURNITIN_SIMILARY_REPORT_PAYLOAD")  # pylint: disable=literal-used-as-attribute
         current_user = self.get_django_user()
         try:
             last_submission = TurnitinSubmission.objects.filter(
@@ -300,9 +269,11 @@ class TurnitinXBlock(XBlock):
         return response.json()
 
     @XBlock.json_handler
-    def get_similarity_report_status(self, data, suffix=""):
+    def get_similarity_report_status(
+        self, data, suffix=""
+    ):  # pylint: disable=unused-argument
         """
-        Retrieves the status of the similarity report for the user's latest Turnitin submission.
+        Retrieve the status of the similarity report for the user's latest Turnitin submission.
 
         Args:
             data (dict): Input data for the request.
@@ -322,9 +293,11 @@ class TurnitinXBlock(XBlock):
         return response.json()
 
     @XBlock.json_handler
-    def create_similarity_viewer(self, data, suffix=""):
+    def create_similarity_viewer(
+        self, data, suffix=""
+    ):  # pylint: disable=unused-argument
         """
-        Creates a Turnitin similarity viewer for the user's latest submission.
+        Create a Turnitin similarity viewer for the user's latest submission.
 
         Args:
             data (dict): Input data for the request.
@@ -366,13 +339,9 @@ class TurnitinXBlock(XBlock):
         )
         return response.json()
 
-    # ----------------------------------------------------------------------------
-
-    # TO-DO: change this to create the scenarios you'd like to see in the
-    # workbench while developing your XBlock.
     @staticmethod
     def workbench_scenarios():
-        """A canned scenario for display in the workbench."""
+        """Define a workbench scenarios."""
         return [
             (
                 "TurnitinXBlock",
@@ -393,7 +362,8 @@ class TurnitinXBlock(XBlock):
     @staticmethod
     def _get_statici18n_js_url():
         """
-        Returns the Javascript translation file for the currently selected language, if any.
+        Return the Javascript translation file for the currently selected language, if any.
+
         Defaults to English if available.
         """
         locale_code = translation.get_language()
@@ -412,6 +382,6 @@ class TurnitinXBlock(XBlock):
     @staticmethod
     def get_dummy():
         """
-        Dummy method to generate initial i18n
+        Return a dummy translation to generate initial i18n.
         """
         return translation.gettext_noop("Dummy")
