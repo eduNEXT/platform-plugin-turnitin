@@ -1,0 +1,63 @@
+<div class="turnitin_block">
+
+    <section class="turnitin-test-section">
+        <h2>EULA Viewer</h2>
+        <button id="viewEULA">View EULA</button>
+
+        <div class="modal" id="eulaModal">
+            <div class="modal-content">
+                <h2>End User License Agreement (EULA)</h2>
+                <p>Terms and Conditions</p>
+                <button id="acceptEULA">Accept</button>
+                <button id="declineEULA">Cancel</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="turnitin-test-section">
+        <div class="file-upload-container">
+            <h2>File Upload</h2>
+            <form enctype="multipart/form-data">
+                <div class="file-upload">
+                    <input type="file" name="uploaded_file" id="file" accept=".doc, .docx">
+                    <label for="file">Select File</label>
+                    <span class="selected-filename">No file selected</span>
+                </div>
+                <button type="submit" id="uploadBtn" disabled>Upload File</button>
+            </form>
+        </div>
+    </section>
+
+
+    <section class="turnitin-test-section">
+        <h2>File Processing Status</h2>
+        <div class="traffic-light">
+            <div id="redLight1" class="light red off"></div>
+            <div id="yellowLight1" class="light yellow off"></div>
+            <div id="greenLight1" class="light green off"></div>
+        </div>
+        <div class="status-text" id="statusText1"></div>
+        <button id="refreshBtn1" class="refresh-btn">Refresh</button>
+        <button id="generateReportBtn1" class="generate-btn" disabled>Generate Similarity Report</button>
+    </section>
+
+    <section class="turnitin-test-section">
+        <h2>Similarity Processing Status</h2>
+        <div class="traffic-light">
+            <div id="redLight2" class="light red off"></div>
+            <div id="yellowLight2" class="light yellow off"></div>
+            <div id="greenLight2" class="light green off"></div>
+        </div>
+        <div class="status-text" id="statusText2"></div>
+        <button id="refreshBtn2" class="refresh-btn" disabled>Refresh</button>
+        <button id="generateReportBtn2" class="generate-btn" disabled>Launch Viewer</button>
+    </section>
+
+    <!-- <section class="turnitin-test-section">
+        <h2>Text to File</h2>
+        <div style="padding: 20px;">
+            <textarea id="textsubmission"></textarea>
+            <br><br>
+            <button id="sendtextsubmission">Enviar asignatura</button>
+        </div>
+    </section> -->

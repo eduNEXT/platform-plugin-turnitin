@@ -1,0 +1,225 @@
+/* CSS for TurnitinXBlock */
+
+.turnitin_block .count {
+    font-weight: bold;
+}
+
+.turnitin_block p {
+    cursor: pointer;
+}
+
+
+/* Estilo base para todas las secciones */
+.turnitin-test-section {
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-height: 200px;
+}
+/* Estilo para las secciones pares (gris claro) */
+.turnitin-test-section:nth-child(even) {
+    background-color: #f4f4f4; /* Gris claro */
+}
+
+/* Estilo para las secciones impares (blanco) */
+.turnitin-test-section:nth-child(odd) {
+    background-color: #ffffff; /* Blanco */
+}
+
+
+.file-upload-container {
+    background-color: #ffffff;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.file-upload {
+    position: relative;
+    display: block;
+    margin: 20px 0;
+}
+
+.file-upload input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-upload label {
+    padding: 10px 25px;
+    background-color: #4CAF50;
+    color: #fff;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+    transform: scale(1);
+}
+
+.file-upload label.file-selected {
+    background-color: #808080; /* Gris */
+    transform: scale(1.05);
+}
+
+/* Este selector garantiza que el cambio a rojo solo ocurra cuando se ha seleccionado un archivo */
+.file-upload label.file-selected:hover {
+    background-color: #00244d; /* Cambio a rojo al pasar el cursor */
+    color: #FFFFFF; /* Letras blancas */
+}
+
+.selected-filename {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+    font-weight: bold;
+}
+
+
+button {
+    padding: 10px 25px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+/* CSS PARA EL MODAL EULA */
+.modal {
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    min-height: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: white;
+    z-index: 1000;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.modal-content {
+    margin-top: 0;
+    padding-top: 20px; /* Ajusta según lo necesario */
+}
+
+/* CSS PARA STATUS*/
+.status-text {
+    font-size: 16px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.red-text {
+    color: red;
+}
+
+.yellow-text {
+    color: rgb(168, 168, 14);
+}
+
+.green-text {
+    color: green;
+}
+
+
+.traffic-light {
+    width: 50px;
+    height: 150px;
+    background-color: #333;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px 0;
+    margin: 0 auto;
+}
+
+.light {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #111;
+}
+
+.red {
+    background-color: rgb(255, 0, 0);
+}
+
+.yellow {
+    background-color: #ffee00;
+}
+
+.green {
+    background-color: #00fb00;
+}
+
+.off {
+    opacity: 0.3;
+}
+
+.refresh-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #0077CC;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    outline: none;
+    transition: background-color 0.3s;
+}
+
+.refresh-btn:hover {
+    background-color: #0055AA;
+}
+
+
+.generate-btn {
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #444;
+    color: #aaa;
+    cursor: not-allowed;
+    font-size: 16px;
+    outline: none;
+    transition: background-color 0.3s;
+}
+
+.generate-btn.enabled {
+    background-color: #0077CC;
+    color: #fff;
+    cursor: pointer;
+}
+
+.generate-btn.enabled:hover {
+    background-color: #0055AA;
+}
+
+/* CSS PARA EL TEXT ASSESSMENT */
+#textsubmission{
+    width: 400px;
+    height: 250px;
+}
