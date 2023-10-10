@@ -97,15 +97,22 @@ class TurnitinXBlock(XBlock):
         """
         user_service = self.runtime.service(self, "user")
         current_user = user_service.get_current_user()
-        user_full_name = current_user.full_name.split()
+        full_name = current_user.full_name.split()
         return {
             "user_id": current_user.opt_attrs["edx-platform.user_id"],
             "user_email": current_user.emails[0],
-            "user_name": user_full_name[0] if user_full_name else "no_name",
-            "user_last_name": " ".join(user_full_name[1:])
-            if len(user_full_name) > 1
+            "name": full_name[0] if full_name else "no_name",
+            "last_name": " ".join(full_name[1:])
+            if len(full_name) > 1
             else "no_last_name",
         }
+
+    def get_django_user(self):
+        """
+        Returns the django user.
+        """
+        current_user_id = self.get_user_data()["user_id"]
+        return User.objects.get(id=current_user_id)
 
     @XBlock.json_handler
     def get_eula_agreement(self, data, suffix=""):
@@ -165,15 +172,15 @@ class TurnitinXBlock(XBlock):
                 "owners": [
                     {
                         "id": user_data["user_id"],
-                        "given_name": user_data["user_name"],
-                        "family_name": user_data["user_last_name"],
+                        "given_name": user_data["name"],
+                        "family_name": user_data["last_name"],
                         "email": user_data["user_email"],
                     }
                 ],
                 "submitter": {
                     "id": user_data["user_id"],
-                    "given_name": user_data["user_name"],
-                    "family_name": user_data["user_last_name"],
+                    "given_name": user_data["name"],
+                    "family_name": user_data["last_name"],
                     "email": user_data["user_email"],
                 },
                 "original_submitted_time": date_now,
@@ -196,8 +203,7 @@ class TurnitinXBlock(XBlock):
         turnitin_submission = self.create_turnitin_submission_object()
         if turnitin_submission.status_code == HTTPStatus.CREATED:
             turnitin_submission_id = turnitin_submission.json()["id"]
-            current_user_id = self.get_user_data()["user_id"]
-            current_user = User.objects.get(id=current_user_id)
+            current_user = self.get_django_user()
             submission = TurnitinSubmission(
                 user=current_user, turnitin_submission_id=turnitin_submission_id
             )
@@ -208,13 +214,9 @@ class TurnitinXBlock(XBlock):
             )
             return Response(
                 json.dumps(response.json()),
-                content_type="application/json",
-                charset="UTF-8",
             )
         return Response(
             json.dumps(turnitin_submission.json()),
-            content_type="application/json",
-            charset="UTF-8",
         )
 
     @XBlock.json_handler
@@ -229,8 +231,7 @@ class TurnitinXBlock(XBlock):
         Returns:
             dict: Information related to the user's latest Turnitin submission.
         """
-        current_user_id = self.get_user_data()["user_id"]
-        current_user = User.objects.get(id=current_user_id)
+        current_user = self.get_django_user()
         try:
             last_submission = TurnitinSubmission.objects.filter(
                 user=current_user
@@ -286,8 +287,7 @@ class TurnitinXBlock(XBlock):
                 "exclude_submitted_works": False,
             },
         }
-        current_user_id = self.get_user_data()["user_id"]
-        current_user = User.objects.get(id=current_user_id)
+        current_user = self.get_django_user()
         try:
             last_submission = TurnitinSubmission.objects.filter(
                 user=current_user
@@ -311,8 +311,7 @@ class TurnitinXBlock(XBlock):
         Returns:
             dict: Information related to the status of the similarity report.
         """
-        current_user_id = self.get_user_data()["user_id"]
-        current_user = User.objects.get(id=current_user_id)
+        current_user = self.get_django_user()
         try:
             last_submission = TurnitinSubmission.objects.filter(
                 user=current_user
@@ -335,7 +334,6 @@ class TurnitinXBlock(XBlock):
             dict: Contains the URL for the similarity viewer.
         """
         user_data = self.get_user_data()
-        user_name = user_data["user_name"]
         payload = {
             "viewer_user_id": user_data["user_id"],
             "locale": "en-EN",
@@ -351,8 +349,8 @@ class TurnitinXBlock(XBlock):
                 "view_settings": {"save_changes": True},
             },
             "author_metadata_override": {
-                "family_name": user_data["user_last_name"],
-                "given_name": user_data["user_name"],
+                "family_name": user_data["last_name"],
+                "given_name": user_data["name"],
             },
             "sidebar": {"default_mode": "similarity"},
         }
