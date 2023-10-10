@@ -17,9 +17,10 @@ def put_generate_similarity_report(submission_id, payload):
 def get_similarity_report_info(submission_id):
     """
     Returns summary information about the requested Similarity Report.
+
     Status:
-        PROCESSING
-        COMPLETE
+    - PROCESSING
+    - COMPLETE
     """
     response = turnitin_api_handler("get", f"submissions/{submission_id}/similarity")
     return response
