@@ -11,6 +11,33 @@ TCA_INTEGRATION_VERSION = getattr(settings, "TURNITIN_TCA_INTEGRATION_VERSION", 
 TCA_API_KEY = getattr(settings, "TURNITIN_TCA_API_KEY", None)
 
 
+def get_request_method_func(request_method: str):
+    """
+    Retrieve the appropriate request method function from the `requests` library
+    based on the provided HTTP request method.
+
+    Parameters:
+    - request_method (str): The HTTP method as a string (e.g., 'GET', 'POST', 'PUT', 'PATCH', 'DELETE').
+
+    Returns:
+    - function: The corresponding function from the `requests` library (e.g., requests.get, requests.post).
+
+    Raises:
+    - ValueError: If the provided request_method is unsupported or not recognized.
+    """
+    method_map = {
+        "get": requests.get,
+        "post": requests.post,
+        "put": requests.put,
+        "delete": requests.delete,
+        "patch": requests.patch,
+    }
+    method_func = method_map.get(request_method.lower())
+    if not method_func:
+        raise ValueError(f"Unsupported request method: {request_method}")
+    return method_func
+
+
 def turnitin_api_handler(
     request_method: str,
     url_prefix: str = "",
@@ -28,9 +55,6 @@ def turnitin_api_handler(
 
     Returns:
     - Response: A requests.Response object containing the server's response to the request.
-
-    Raises:
-    - ValueError: If an unsupported request method is provided.
     """
     headers = {
         "X-Turnitin-Integration-Name": TCA_INTEGRATION_FAMILY,
@@ -49,27 +73,16 @@ def turnitin_api_handler(
         )
         return response
 
-    method_map = {
-        "get": requests.get,
-        "post": requests.post,
-        "put": requests.put,
-        "delete": requests.delete,
-        "patch": requests.patch,
+    method_func = get_request_method_func(request_method)
+
+    args = {
+        "headers": headers,
+        "json"
+        if request_method.lower() in ["post", "put", "patch"]
+        else "params": data,
     }
 
-    method_func = method_map.get(request_method.lower())
-
-    if not method_func:
-        raise ValueError(f"Unsupported request method: {request_method}")
-
-    if request_method.lower() in ["post", "put", "patch"]:
-        response = method_func(
-            f"{TII_API_URL}/api/v1/{url_prefix}", headers=headers, json=data
-        )
-    else:
-        response = method_func(
-            f"{TII_API_URL}/api/v1/{url_prefix}", headers=headers, params=data
-        )
+    response = method_func(f"{TII_API_URL}/api/v1/{url_prefix}", **args)
 
     return response
 
