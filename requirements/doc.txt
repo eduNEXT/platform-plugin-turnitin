@@ -22,11 +22,11 @@ babel==2.13.0
     #   sphinx
 beautifulsoup4==4.12.2
     # via pydata-sphinx-theme
-boto3==1.28.60
+boto3==1.28.62
     # via
     #   -r requirements/test.txt
     #   fs-s3fs
-botocore==1.31.60
+botocore==1.31.62
     # via
     #   -r requirements/test.txt
     #   boto3
@@ -34,11 +34,15 @@ botocore==1.31.60
 build==1.0.3
     # via -r requirements/doc.in
 certifi==2023.7.22
-    # via requests
+    # via
+    #   -r requirements/test.txt
+    #   requests
 cffi==1.16.0
     # via cryptography
 charset-normalizer==3.3.0
-    # via requests
+    # via
+    #   -r requirements/test.txt
+    #   requests
 click==8.1.7
     # via
     #   -r requirements/test.txt
@@ -80,7 +84,9 @@ fs-s3fs==1.1.1
     #   -r requirements/test.txt
     #   openedx-django-pyfs
 idna==3.4
-    # via requests
+    # via
+    #   -r requirements/test.txt
+    #   requests
 imagesize==1.4.1
     # via sphinx
 importlib-metadata==6.8.0
@@ -124,6 +130,7 @@ lxml==4.9.3
 mako==1.2.4
     # via
     #   -r requirements/test.txt
+    #   xblock
     #   xblock-utils
 markdown-it-py==3.0.0
     # via rich
@@ -207,6 +214,7 @@ readme-renderer==42.0
     # via twine
 requests==2.31.0
     # via
+    #   -r requirements/test.txt
     #   requests-toolbelt
     #   sphinx
     #   twine
@@ -224,9 +232,10 @@ s3transfer==0.7.0
     #   boto3
 secretstorage==3.3.3
     # via keyring
-simplejson==3.19.1
+simplejson==3.19.2
     # via
     #   -r requirements/test.txt
+    #   xblock
     #   xblock-utils
 six==1.16.0
     # via
@@ -301,7 +310,7 @@ webob==1.8.7
     # via
     #   -r requirements/test.txt
     #   xblock
-xblock[django]==1.8.0
+xblock[django]==1.8.1
     # via
     #   -r requirements/test.txt
     #   xblock-utils

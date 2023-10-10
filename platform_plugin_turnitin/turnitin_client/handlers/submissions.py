@@ -1,5 +1,7 @@
+"""
+Submissions hanlders
+"""
 from .api_handler import turnitin_api_handler
-from .utils import pretty_print_response
 
 
 def post_create_submission(payload):
@@ -9,7 +11,6 @@ def post_create_submission(payload):
     related to an assessment sent by a student.
     """
     response = turnitin_api_handler("post", "submissions", payload)
-    pretty_print_response(response, "CREATE SUBMISSION")
     return response
 
 
@@ -23,7 +24,6 @@ def put_upload_submission_file_content(submission_id, file):
         is_upload=True,
         uploaded_file=file,
     )
-    pretty_print_response(response, "UPLOAD FILE")
     return response
 
 
@@ -39,7 +39,6 @@ def get_submission_info(submission_id):
 
     """
     response = turnitin_api_handler("get", f"submissions/{submission_id}")
-    pretty_print_response(response, "SUBMISSION STATUS")
     return response
 
 
@@ -51,7 +50,7 @@ def delete_submission(submission_id, is_hard_delete="false"):
     response = turnitin_api_handler(
         "delete", f"submissions/{submission_id}/?hard={is_hard_delete}"
     )
-    pretty_print_response(response)
+    return response
 
 
 def put_recover_submission(submission_id):
@@ -59,4 +58,4 @@ def put_recover_submission(submission_id):
     Recovers a submission that has been soft deleted
     """
     response = turnitin_api_handler("put", f"submissions/{submission_id}/recover")
-    pretty_print_response(response)
+    return response

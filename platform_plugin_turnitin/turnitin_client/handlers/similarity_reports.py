@@ -1,5 +1,7 @@
+"""
+Similarity reports handlers
+"""
 from .api_handler import turnitin_api_handler
-from .utils import pretty_print_response
 
 
 def put_generate_similarity_report(submission_id, payload):
@@ -9,7 +11,6 @@ def put_generate_similarity_report(submission_id, payload):
     response = turnitin_api_handler(
         "put", f"submissions/{submission_id}/similarity", payload
     )
-    pretty_print_response(response, "REPORT GENERATION")
     return response
 
 
@@ -21,7 +22,6 @@ def get_similarity_report_info(submission_id):
         COMPLETE
     """
     response = turnitin_api_handler("get", f"submissions/{submission_id}/similarity")
-    pretty_print_response(response, "REPORT STATUS")
     return response
 
 
@@ -34,7 +34,6 @@ def post_create_viewer_launch_url(submission_id, payload):
     response = turnitin_api_handler(
         "post", f"submissions/{submission_id}/viewer-url", payload
     )
-    pretty_print_response(response, "URL VIEWER")
     return response
 
 
@@ -46,7 +45,7 @@ def post_generate_similarity_report_pdf(submission_id):
     response = turnitin_api_handler(
         "post", f"submissions/{submission_id}/similarity/pdf"
     )
-    pretty_print_response(response)
+    return response
 
 
 def get_similarity_report_pdf(submission_id, pdf_id):
@@ -56,7 +55,7 @@ def get_similarity_report_pdf(submission_id, pdf_id):
     response = turnitin_api_handler(
         "get", f"submissions/{submission_id}/similarity/pdf/{pdf_id}"
     )
-    pretty_print_response(response)
+    return response
 
 
 def get_similarity_report_pdf_status(submission_id, pdf_id):
@@ -66,4 +65,4 @@ def get_similarity_report_pdf_status(submission_id, pdf_id):
     response = turnitin_api_handler(
         "get", f"submissions/{submission_id}/similarity/pdf/{pdf_id}/status"
     )
-    pretty_print_response(response)
+    return response

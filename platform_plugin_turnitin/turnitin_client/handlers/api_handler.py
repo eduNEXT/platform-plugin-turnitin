@@ -1,9 +1,10 @@
+"""
+API handlers for turnitin integration
+"""
 from typing import Dict, Optional
 
 import requests
 from django.conf import settings
-
-from .utils import pretty_print_response
 
 TII_API_URL = getattr(settings, "TURNITIN_TII_API_URL", None)
 TCA_INTEGRATION_FAMILY = getattr(settings, "TURNITIN_TCA_INTEGRATION_FAMILY", None)
@@ -69,7 +70,8 @@ def turnitin_api_handler(
         headers["Content-Type"] = "binary/octet-stream"
         headers["Content-Disposition"] = f'inline; filename="{uploaded_file.name}"'
         response = requests.put(
-            f"{TII_API_URL}/api/v1/{url_prefix}", headers=headers, data=uploaded_file
+            f"{TII_API_URL}/api/v1/{url_prefix}", headers=headers, data=uploaded_file,
+            timeout=settings.TURNITIN_API_TIMEOUT
         )
         return response
 
@@ -92,4 +94,4 @@ def get_features_enabled():
     Returns all the features enabled in the Turnitin account.
     """
     response = turnitin_api_handler("get", "features-enabled")
-    pretty_print_response(response)
+    return response

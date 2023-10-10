@@ -18,8 +18,7 @@ class TurnitinSubmission(models.Model):
     - turnitin_submission_pdf_id (str): The unique identifier for the PDF version of the submission in Turnitin.
     - created_at (datetime): The date and time when the submission was created.
 
-    Methods:
-    - __str__: Returns a string representation of the submission, showing its ID and creation date.
+    .. no_pii:
     """
 
     user = models.ForeignKey(
@@ -28,6 +27,3 @@ class TurnitinSubmission(models.Model):
     turnitin_submission_id = models.CharField(max_length=255, blank=True, null=True)
     turnitin_submission_pdf_id = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Submission: {self.turnitin_submission_id or 'Not Set'} - created at: {self.created_at}"
