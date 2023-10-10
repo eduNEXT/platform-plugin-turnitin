@@ -255,7 +255,9 @@ class TurnitinXBlock(XBlock):
         Returns:
             dict: The status of the similarity report generation process.
         """
-        payload = getattr(settings, "TURNITIN_SIMILARY_REPORT_PAYLOAD")  # pylint: disable=literal-used-as-attribute
+        payload = getattr(  # pylint: disable=literal-used-as-attribute
+            settings, "TURNITIN_SIMILARY_REPORT_PAYLOAD"
+        )
         current_user = self.get_django_user()
         try:
             last_submission = TurnitinSubmission.objects.filter(

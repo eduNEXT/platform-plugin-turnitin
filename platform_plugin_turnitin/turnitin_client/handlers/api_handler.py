@@ -70,8 +70,10 @@ def turnitin_api_handler(
         headers["Content-Type"] = "binary/octet-stream"
         headers["Content-Disposition"] = f'inline; filename="{uploaded_file.name}"'
         response = requests.put(
-            f"{TII_API_URL}/api/v1/{url_prefix}", headers=headers, data=uploaded_file,
-            timeout=settings.TURNITIN_API_TIMEOUT
+            f"{TII_API_URL}/api/v1/{url_prefix}",
+            headers=headers,
+            data=uploaded_file,
+            timeout=settings.TURNITIN_API_TIMEOUT,
         )
         return response
 
