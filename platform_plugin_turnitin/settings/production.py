@@ -31,3 +31,21 @@ def plugin_settings(settings):
     settings.TURNITIN_API_TIMEOUT = getattr(settings, "ENV_TOKENS", {}).get(
         "TURNITIN_API_TIMEOUT", settings.TURNITIN_API_TIMEOUT
     )
+    settings.PLATFORM_PLUGIN_TURNITIN_AUTHENTICATION_BACKEND = getattr(
+        settings, "ENV_TOKENS", {}
+    ).get(
+        "PLATFORM_PLUGIN_TURNITIN_AUTHENTICATION_BACKEND",
+        settings.PLATFORM_PLUGIN_TURNITIN_AUTHENTICATION_BACKEND,
+    )
+    settings.PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND = getattr(
+        settings, "ENV_TOKENS", {}
+    ).get(
+        "PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND",
+        settings.PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND,
+    )
+    settings.PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND = getattr(
+        settings, "ENV_TOKENS", {}
+    ).get(
+        "PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND",
+        settings.PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND,
+    )
