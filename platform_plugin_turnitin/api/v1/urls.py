@@ -9,9 +9,9 @@ app_name = "platform_plugin_turnitin"
 urlpatterns = [
     path("upload-file/", views.TurnitinUploadFileAPIView.as_view(), name="upload-file"),
     path(
-        "submission-status/<uuid:submission_id>/",
+        "submission/<uuid:submission_id>/",
         views.TurnitinSubmissionAPIView.as_view(),
-        name="get-submission-info",
+        name="get-submission",
     ),
     path(
         "similarity-report/<uuid:submission_id>/",
