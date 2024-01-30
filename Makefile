@@ -67,8 +67,8 @@ test: clean ## run tests in the current virtualenv
 	pytest
 
 format: ## Format code automatically
-	isort $(SOURCES)
 	black $(BLACK_OPTS)
+	isort $(SOURCES)
 
 diff_cover: test ## find diff lines that need test coverage
 	diff-cover coverage.xml
