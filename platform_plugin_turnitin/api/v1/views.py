@@ -24,7 +24,24 @@ from platform_plugin_turnitin.utils import get_current_datetime
 
 class TurnitinUploadFileAPIView(GenericAPIView):
     """
-    Base class for Turnitin API views.
+    API views providing functionality to upload files for plagiarism checking.
+
+    `Example Requests`:
+
+        * POST platform-plugin-turnitin/{course_id}/api/v1/upload-file
+
+            * Path Parameters:
+                * course_id (str): The unique identifier for the course (required).
+
+    `Example Response`:
+
+        * POST platform-plugin-turnitin/{course_id}/api/v1/upload-file
+
+            * 400: The supplied course_id key is not valid.
+
+            * 404: The course is not found.
+
+            * 200: The file was successfully uploaded to Turnitin.
     """
 
     authentication_classes = (
@@ -35,8 +52,11 @@ class TurnitinUploadFileAPIView(GenericAPIView):
 
     def post(self, request, course_id: str):
         """
-        Returns a TurnitinAPI instance.
+        Handle the upload of the user's file to Turnitin.
         """
+        if response := validate_request(request, course_id, only_course=True):
+            return response
+
         turnitin_client = TurnitinClient(request, request.user, course_id)
         agreement_response = turnitin_client.accept_eula_agreement()
 
@@ -48,7 +68,29 @@ class TurnitinUploadFileAPIView(GenericAPIView):
 
 class TurnitinSubmissionAPIView(GenericAPIView):
     """
-    Base class for Turnitin submission API views.
+    API views providing functionality to retrieve information related to a Turnitin submission.
+
+    `Example Requests`:
+
+        * GET platform-plugin-turnitin/{course_id}/api/v1/submission/{submission_id}
+
+            * Path Parameters:
+
+                * course_id (str): The unique identifier for the course (required).
+                * submission_id (str): The unique identifier for the submission (required).
+
+    `Example Response`:
+
+        * GET platform-plugin-turnitin/{course_id}/api/v1/submission/{submission_id}
+
+            * 400: The supplied course_id key is not valid.
+
+            * 403: The user does not have permission to access the submission.
+
+            * 404: The course is not found.
+
+            * 200: The submission information was successfully retrieved.
+
     """
 
     authentication_classes = (
@@ -59,7 +101,7 @@ class TurnitinSubmissionAPIView(GenericAPIView):
 
     def get(self, request, course_id: str, submission_id: str):
         """
-        Returns a TurnitinAPI instance.
+        Handle the retrieval of the submission information for a Turnitin submission.
         """
         if response := validate_request(request, course_id):
             return response
@@ -70,7 +112,45 @@ class TurnitinSubmissionAPIView(GenericAPIView):
 
 class TurnitinSimilarityReportAPIView(GenericAPIView):
     """
-    Base class for Turnitin similarity report API views.
+    API views providing functionality to generate a similarity report for a Turnitin submission.
+
+    `Example Requests`:
+
+        * GET platform-plugin-turnitin/{course_id}/api/v1/similarity-report/{submission_id}
+
+            * Path Parameters:
+
+                * course_id (str): The unique identifier for the course (required).
+                * submission_id (str): The unique identifier for the submission (required).
+
+        * PUT platform-plugin-turnitin/{course_id}/api/v1/similarity-report/{submission_id}
+
+            * Path Parameters:
+
+                * course_id (str): The unique identifier for the course (required).
+                * submission_id (str): The unique identifier for the submission (required).
+
+    `Example Response`:
+
+        * GET platform-plugin-turnitin/{course_id}/api/v1/similarity-report/{submission_id}
+
+            * 400: The supplied course_id key is not valid.
+
+            * 403: The user does not have permission to access the submission.
+
+            * 404: The course is not found.
+
+            * 200: The similarity report information was successfully retrieved.
+
+        * PUT platform-plugin-turnitin/{course_id}/api/v1/similarity-report/{submission_id}
+
+            * 400: The supplied course_id key is not valid.
+
+            * 403: The user does not have permission to access the submission.
+
+            * 404: The course is not found.
+
+            * 200: The similarity report was successfully generated.
     """
 
     authentication_classes = (
@@ -81,7 +161,7 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
 
     def get(self, request, course_id: str, submission_id: str):
         """
-        Returns a TurnitinAPI instance.
+        Handle the retrieval of the similarity report for a Turnitin submission.
         """
         if response := validate_request(request, course_id):
             return response
@@ -91,7 +171,7 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
 
     def put(self, request, course_id: str, submission_id: str):
         """
-        Returns a TurnitinAPI instance.
+        Handle the generation of a similarity report for a Turnitin submission.
         """
         if response := validate_request(request, course_id):
             return response
@@ -102,7 +182,28 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
 
 class TurnitinViewerAPIView(GenericAPIView):
     """
-    Base class for Turnitin viewer API views.
+    API views providing functionality to create a Turnitin similarity viewer.
+
+    `Example Requests`:
+
+        * GET platform-plugin-turnitin/{course_id}/api/v1/viewer-url/{submission_id}
+
+            * Path Parameters:
+
+                * course_id (str): The unique identifier for the course (required).
+                * submission_id (str): The unique identifier for the submission (required).
+
+    `Example Response`:
+
+        * GET platform-plugin-turnitin/{course_id}/api/v1/viewer-url/{submission_id}
+
+            * 400: The supplied course_id key is not valid.
+
+            * 403: The user does not have permission to access the submission.
+
+            * 404: The course is not found.
+
+            * 200: The similarity viewer was successfully created.
     """
 
     authentication_classes = (
@@ -113,7 +214,7 @@ class TurnitinViewerAPIView(GenericAPIView):
 
     def get(self, request, course_id: str, submission_id: str):
         """
-        Returns a TurnitinAPI instance.
+        Handle the creation of a Turnitin similarity viewer.
         """
         if response := validate_request(request, course_id):
             return response
@@ -123,7 +224,37 @@ class TurnitinViewerAPIView(GenericAPIView):
 
 
 class TurnitinClient:
-    """Turnitin API client."""
+    """
+    A client class for interacting with Turnitin API.
+
+    Args:
+        request: The HTTP request object.
+        user: The user object representing the current user.
+        course: The course identifier associated with the user.
+
+    Attributes:
+        request: The HTTP request object.
+        user: The user object representing the current user.
+        course: The course identifier associated with the user.
+        first_name: The first name of the user extracted from the user profile.
+        last_name: The last name of the user extracted from the user profile.
+
+    Methods:
+        accept_eula_agreement():
+            Submit acceptance of the End-User License Agreement (EULA) for the current user.
+        upload_turnitin_submission_file():
+            Handle the upload of the user's file to Turnitin.
+        create_turnitin_submission_object():
+            Create a Turnitin submission object based on the user's data.
+        get_submission_status(submission_id: str):
+            Retrieve the status of the latest Turnitin submission for the user.
+        generate_similarity_report(submission_id: str):
+            Initialize the generation of a similarity report for the user's latest Turnitin submission.
+        get_similarity_report_status(submission_id: str):
+            Retrieve the status of the similarity report for the user's latest Turnitin submission.
+        create_similarity_viewer(submission_id: str):
+            Create a Turnitin similarity viewer for the user's latest submission.
+    """
 
     def __init__(self, request, user, course) -> None:
         self.request = request

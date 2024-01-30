@@ -60,7 +60,9 @@ def api_error(error: str, status_code: int) -> Response:
     return Response(data={"error": error}, status=status_code)
 
 
-def validate_request(request, course_id: str) -> Optional[Response]:
+def validate_request(
+    request, course_id: str, only_course: bool = False
+) -> Optional[Response]:
     """
     Validate the request and return a error response if the request is invalid.
 
@@ -72,6 +74,7 @@ def validate_request(request, course_id: str) -> Optional[Response]:
     Args:
         request (Request): The request object.
         course_id (str): The course ID.
+        only_course (bool, optional): If True, only validate the course ID. Defaults to False.
 
     Returns:
         Optional[Response]: A response object if the request is invalid.
@@ -91,6 +94,9 @@ def validate_request(request, course_id: str) -> Optional[Response]:
             {"course_id": f"The course with {course_id=} is not found."},
             status_code=status.HTTP_404_NOT_FOUND,
         )
+
+    if only_course:
+        return None
 
     user_has_access = any(
         [
