@@ -1,6 +1,7 @@
 """
 API handlers for turnitin integration
 """
+
 from typing import Dict, Optional
 
 import requests
@@ -81,9 +82,9 @@ def turnitin_api_handler(
 
     args = {
         "headers": headers,
-        "json"
-        if request_method.lower() in ["post", "put", "patch"]
-        else "params": data,
+        (
+            "json" if request_method.lower() in ["post", "put", "patch"] else "params"
+        ): data,
     }
 
     response = method_func(f"{TII_API_URL}/api/v1/{url_prefix}", **args)

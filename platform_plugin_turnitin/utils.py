@@ -5,7 +5,7 @@ from datetime import datetime
 
 def get_current_datetime() -> str:
     """
-    Returns the current datetime in ISO 8601 format.
+    Return the current datetime in ISO 8601 format.
 
     Example:
         >>> get_current_datetime()

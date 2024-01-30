@@ -1,6 +1,7 @@
 """
 EULA handlers for turnitin xblock
 """
+
 from .api_handler import turnitin_api_handler
 
 

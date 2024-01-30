@@ -100,9 +100,9 @@ class TurnitinXBlock(XBlock):
             "user_id": current_user.opt_attrs["edx-platform.user_id"],
             "user_email": current_user.emails[0],
             "name": full_name[0] if full_name else "no_name",
-            "last_name": " ".join(full_name[1:])
-            if len(full_name) > 1
-            else "no_last_name",
+            "last_name": (
+                " ".join(full_name[1:]) if len(full_name) > 1 else "no_last_name"
+            ),
         }
 
     def get_django_user(self):

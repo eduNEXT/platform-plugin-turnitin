@@ -1,4 +1,5 @@
 """Utility functions for the Turnitin API."""
+
 from typing import Optional, Tuple
 
 from opaque_keys import InvalidKeyError
@@ -6,11 +7,7 @@ from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
 from rest_framework.response import Response
 
-from platform_plugin_turnitin.edxapp_wrapper import (
-    CourseInstructorRole,
-    CourseStaffRole,
-    get_course_overview_or_none,
-)
+from platform_plugin_turnitin.edxapp_wrapper import CourseInstructorRole, CourseStaffRole, get_course_overview_or_none
 
 
 def get_fullname(name: str) -> Tuple[str, str]:
