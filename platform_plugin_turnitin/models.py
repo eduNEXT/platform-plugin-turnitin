@@ -6,6 +6,9 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class TurnitinSubmission(models.Model):
+    """
+    .. no_pii:
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submissions')
     turnitin_submission_id = models.CharField(max_length=255, blank=True, null=True)
     turnitin_submission_pdf_id = models.CharField(max_length=255, blank=True, null=True)
