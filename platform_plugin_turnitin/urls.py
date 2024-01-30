@@ -1,10 +1,15 @@
-"""
-URLs for platform_plugin_turnitin.
-"""
-from django.urls import re_path  # pylint: disable=unused-import
-from django.views.generic import TemplateView  # pylint: disable=unused-import
+"""URL patterns for the platform_plugin_turnitin plugin."""
+
+from django.urls import include, path
+
+app_name = "platform_plugin_turnitin"
 
 urlpatterns = [
-    # TODO: Fill in URL patterns and views here.
-    # re_path(r'', TemplateView.as_view(template_name="platform_plugin_turnitin/base.html")),
+    path(
+        "api/",
+        include(
+            "platform_plugin_turnitin.api.urls",
+            namespace="turnitin-api",
+        ),
+    ),
 ]
