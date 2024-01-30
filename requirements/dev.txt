@@ -4,10 +4,6 @@
 #
 #    make upgrade
 #
-appdirs==1.4.4
-    # via
-    #   -r requirements/quality.txt
-    #   fs
 asgiref==3.7.2
     # via
     #   -r requirements/quality.txt
@@ -19,15 +15,6 @@ astroid==3.0.2
     #   pylint-celery
 black==24.1.1
     # via -r requirements/dev.in
-boto3==1.34.29
-    # via
-    #   -r requirements/quality.txt
-    #   fs-s3fs
-botocore==1.34.29
-    # via
-    #   -r requirements/quality.txt
-    #   boto3
-    #   s3transfer
 build==1.0.3
     # via
     #   -r requirements/pip-tools.txt
@@ -70,7 +57,7 @@ coverage[toml]==7.4.1
     #   -r requirements/quality.txt
     #   coverage
     #   pytest-cov
-cryptography==42.0.1
+cryptography==42.0.2
     # via
     #   -r requirements/quality.txt
     #   pyjwt
@@ -95,7 +82,6 @@ django==3.2.23
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-i18n-tools
-    #   openedx-django-pyfs
 django-crum==0.7.9
     # via
     #   -r requirements/quality.txt
@@ -137,16 +123,6 @@ filelock==3.13.1
     #   -r requirements/ci.txt
     #   tox
     #   virtualenv
-fs==2.4.16
-    # via
-    #   -r requirements/quality.txt
-    #   fs-s3fs
-    #   openedx-django-pyfs
-    #   xblock
-fs-s3fs==1.1.1
-    # via
-    #   -r requirements/quality.txt
-    #   openedx-django-pyfs
 idna==3.6
     # via
     #   -r requirements/quality.txt
@@ -168,31 +144,12 @@ jinja2==3.1.3
     #   -r requirements/quality.txt
     #   code-annotations
     #   diff-cover
-jmespath==1.0.1
-    # via
-    #   -r requirements/quality.txt
-    #   boto3
-    #   botocore
-lazy==1.6
-    # via
-    #   -r requirements/quality.txt
-    #   xblock
 lxml==5.1.0
-    # via
-    #   -r requirements/quality.txt
-    #   edx-i18n-tools
-    #   xblock
-mako==1.3.0
-    # via
-    #   -r requirements/quality.txt
-    #   xblock
-    #   xblock-utils
+    # via edx-i18n-tools
 markupsafe==2.1.4
     # via
     #   -r requirements/quality.txt
     #   jinja2
-    #   mako
-    #   xblock
 mccabe==0.7.0
     # via
     #   -r requirements/quality.txt
@@ -203,10 +160,6 @@ newrelic==9.6.0
     # via
     #   -r requirements/quality.txt
     #   edx-django-utils
-openedx-django-pyfs==3.4.1
-    # via
-    #   -r requirements/quality.txt
-    #   xblock
 packaging==23.2
     # via
     #   -r requirements/ci.txt
@@ -305,13 +258,8 @@ pytest==8.0.0
     #   pytest-django
 pytest-cov==4.1.0
     # via -r requirements/quality.txt
-pytest-django==4.7.0
+pytest-django==4.8.0
     # via -r requirements/quality.txt
-python-dateutil==2.8.2
-    # via
-    #   -r requirements/quality.txt
-    #   botocore
-    #   xblock
 python-slugify==8.0.2
     # via
     #   -r requirements/quality.txt
@@ -321,38 +269,24 @@ pytz==2023.4
     #   -r requirements/quality.txt
     #   django
     #   djangorestframework
-    #   xblock
 pyyaml==6.0.1
     # via
     #   -r requirements/quality.txt
     #   code-annotations
     #   edx-i18n-tools
-    #   xblock
 requests==2.31.0
     # via
     #   -r requirements/quality.txt
     #   edx-drf-extensions
-s3transfer==0.10.0
-    # via
-    #   -r requirements/quality.txt
-    #   boto3
 semantic-version==2.10.0
     # via
     #   -r requirements/quality.txt
     #   edx-drf-extensions
-simplejson==3.19.2
-    # via
-    #   -r requirements/quality.txt
-    #   xblock
-    #   xblock-utils
 six==1.16.0
     # via
     #   -r requirements/ci.txt
     #   -r requirements/quality.txt
     #   edx-lint
-    #   fs
-    #   fs-s3fs
-    #   python-dateutil
     #   tox
 snowballstemmer==2.2.0
     # via
@@ -403,35 +337,18 @@ typing-extensions==4.9.0
     #   black
     #   edx-opaque-keys
     #   pylint
-urllib3==1.26.18
+urllib3==2.2.0
     # via
     #   -r requirements/quality.txt
-    #   botocore
     #   requests
 virtualenv==20.25.0
     # via
     #   -r requirements/ci.txt
     #   tox
-web-fragments==2.1.0
-    # via
-    #   -r requirements/quality.txt
-    #   xblock
-    #   xblock-utils
-webob==1.8.7
-    # via
-    #   -r requirements/quality.txt
-    #   xblock
 wheel==0.42.0
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-xblock[django]==1.10.0
-    # via
-    #   -r requirements/quality.txt
-    #   xblock
-    #   xblock-utils
-xblock-utils==4.0.0
-    # via -r requirements/quality.txt
 zipp==3.17.0
     # via
     #   -r requirements/pip-tools.txt

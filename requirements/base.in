@@ -2,8 +2,6 @@
 -c constraints.txt
 
 Django                  # Web application framework
-xblock                  # XBlock framework for Open edX
-xblock-utils            # XBlock utilities
 requests                # HTTP requests
 djangorestframework     # RESTful API framework
 edx-drf-extensions      # Extensions to Django REST Framework for edX
