@@ -1,6 +1,7 @@
 """
 Similarity reports handlers
 """
+
 from .api_handler import turnitin_api_handler
 
 

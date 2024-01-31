@@ -1,7 +1,7 @@
 # Core requirements for using this application
 -c constraints.txt
 
-Django             # Web application framework
-xblock
-xblock-utils
-requests
+Django                  # Web application framework
+requests                # HTTP requests
+djangorestframework     # RESTful API framework
+edx-drf-extensions      # Extensions to Django REST Framework for edX

@@ -72,3 +72,12 @@ def plugin_settings(settings):
         },
     }
     settings.TURNITIN_API_TIMEOUT = 30
+    settings.PLATFORM_PLUGIN_TURNITIN_AUTHENTICATION_BACKEND = (
+        "platform_plugin_turnitin.edxapp_wrapper.backends.authentication_q_v1"
+    )
+    settings.PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND = (
+        "platform_plugin_turnitin.edxapp_wrapper.backends.student_q_v1"
+    )
+    settings.PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND = (
+        "platform_plugin_turnitin.edxapp_wrapper.backends.course_overviews_q_v1"
+    )

@@ -1,4 +1,5 @@
 """Handler module for Turnitin API integration"""
+
 from .eula import get_eula_acceptance_by_user, get_eula_page, get_eula_version_info, post_accept_eula_version
 from .similarity_reports import (
     get_similarity_report_info,

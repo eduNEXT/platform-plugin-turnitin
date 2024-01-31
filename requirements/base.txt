@@ -4,95 +4,87 @@
 #
 #    make upgrade
 #
-appdirs==1.4.4
-    # via fs
 asgiref==3.7.2
     # via django
-boto3==1.28.62
-    # via fs-s3fs
-botocore==1.31.62
+certifi==2023.11.17
+    # via requests
+cffi==1.16.0
     # via
-    #   boto3
-    #   s3transfer
-certifi==2023.7.22
+    #   cryptography
+    #   pynacl
+charset-normalizer==3.3.2
     # via requests
-charset-normalizer==3.3.0
-    # via requests
-django==3.2.22
+click==8.1.7
+    # via edx-django-utils
+cryptography==42.0.2
+    # via pyjwt
+django==3.2.23
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/base.in
-    #   openedx-django-pyfs
-fs==2.4.16
+    #   django-crum
+    #   django-waffle
+    #   djangorestframework
+    #   drf-jwt
+    #   edx-django-utils
+    #   edx-drf-extensions
+django-crum==0.7.9
+    # via edx-django-utils
+django-waffle==4.1.0
     # via
-    #   fs-s3fs
-    #   openedx-django-pyfs
-    #   xblock
-fs-s3fs==1.1.1
-    # via openedx-django-pyfs
-idna==3.4
-    # via requests
-jmespath==1.0.1
-    # via
-    #   boto3
-    #   botocore
-lazy==1.6
-    # via xblock
-lxml==4.9.3
-    # via xblock
-mako==1.2.4
-    # via
-    #   xblock
-    #   xblock-utils
-markupsafe==2.1.3
-    # via
-    #   mako
-    #   xblock
-openedx-django-pyfs==3.4.0
-    # via xblock
-python-dateutil==2.8.2
-    # via
-    #   botocore
-    #   xblock
-pytz==2023.3.post1
-    # via
-    #   django
-    #   xblock
-pyyaml==6.0.1
-    # via xblock
-requests==2.31.0
-    # via -r requirements/base.in
-s3transfer==0.7.0
-    # via boto3
-simplejson==3.19.2
-    # via
-    #   xblock
-    #   xblock-utils
-six==1.16.0
-    # via
-    #   fs
-    #   fs-s3fs
-    #   python-dateutil
-sqlparse==0.4.4
-    # via django
-typing-extensions==4.8.0
-    # via asgiref
-urllib3==1.26.17
-    # via
-    #   botocore
-    #   requests
-web-fragments==2.1.0
-    # via
-    #   xblock
-    #   xblock-utils
-webob==1.8.7
-    # via xblock
-xblock[django]==1.8.1
+    #   edx-django-utils
+    #   edx-drf-extensions
+djangorestframework==3.14.0
     # via
     #   -r requirements/base.in
-    #   xblock-utils
-xblock-utils==4.0.0
+    #   drf-jwt
+    #   edx-drf-extensions
+drf-jwt==1.19.2
+    # via edx-drf-extensions
+edx-django-utils==5.10.1
+    # via edx-drf-extensions
+edx-drf-extensions==10.1.0
     # via -r requirements/base.in
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
+edx-opaque-keys==2.5.1
+    # via edx-drf-extensions
+idna==3.6
+    # via requests
+newrelic==9.6.0
+    # via edx-django-utils
+pbr==6.0.0
+    # via stevedore
+psutil==5.9.8
+    # via edx-django-utils
+pycparser==2.21
+    # via cffi
+pyjwt[crypto]==2.8.0
+    # via
+    #   drf-jwt
+    #   edx-drf-extensions
+    #   pyjwt
+pymongo==3.13.0
+    # via edx-opaque-keys
+pynacl==1.5.0
+    # via edx-django-utils
+pytz==2023.4
+    # via
+    #   django
+    #   djangorestframework
+requests==2.31.0
+    # via
+    #   -r requirements/base.in
+    #   edx-drf-extensions
+semantic-version==2.10.0
+    # via edx-drf-extensions
+sqlparse==0.4.4
+    # via django
+stevedore==5.1.0
+    # via
+    #   edx-django-utils
+    #   edx-opaque-keys
+typing-extensions==4.9.0
+    # via
+    #   asgiref
+    #   edx-opaque-keys
+urllib3==2.2.0
+    # via requests
