@@ -50,7 +50,7 @@ class TurnitinUploadFileAPIView(GenericAPIView):
     )
     permission_classes = (permissions.IsAuthenticated,)
 
-    def post(self, request, course_id: str):
+    def post(self, request, course_id: str) -> Response:
         """
         Handle the upload of the user's file to Turnitin.
         """
@@ -91,6 +91,18 @@ class TurnitinSubmissionAPIView(GenericAPIView):
 
             * 200: The submission information was successfully retrieved.
 
+                The response will contain the following information:
+
+                * owner (str): The username of the user who submitted the file.
+                * title (str): The title of the submission.
+                * status (str): The status of the submission.
+                    Possible values are: CREATED, COMPLETE, PROCESSING, ERROR.
+                * id (str): The unique identifier for the submission.
+                * content_type (str): The content type of the uploaded file.
+                * page_count (int): The number of pages in the uploaded file.
+                * word_count (int): The number of words in the uploaded file.
+                * character_count (int): The number of characters in the uploaded file.
+                * created_time (str): The date and time the submission was created.
     """
 
     authentication_classes = (
@@ -99,7 +111,7 @@ class TurnitinSubmissionAPIView(GenericAPIView):
     )
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, course_id: str, submission_id: str):
+    def get(self, request, course_id: str, submission_id: str) -> Response:
         """
         Handle the retrieval of the submission information for a Turnitin submission.
         """
@@ -142,6 +154,12 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
 
             * 200: The similarity report information was successfully retrieved.
 
+                The response will contain the following information:
+
+                * status (str): The status of the similarity report.
+                    Possible values are: COMPLETE, PROCESSING.
+                * submission_id (str): The unique identifier for the submission.
+
         * PUT platform-plugin-turnitin/{course_id}/api/v1/similarity-report/{submission_id}
 
             * 400: The supplied course_id key is not valid.
@@ -151,6 +169,10 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
             * 404: The course is not found.
 
             * 200: The similarity report was successfully generated.
+
+                The response will contain the following information:
+
+                * message (str): The message returned by Turnitin.
     """
 
     authentication_classes = (
@@ -159,9 +181,9 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
     )
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, course_id: str, submission_id: str):
+    def get(self, request, course_id: str, submission_id: str) -> Response:
         """
-        Handle the retrieval of the similarity report for a Turnitin submission.
+        Handle the retrieval of the similarity report status for a Turnitin submission.
         """
         if response := validate_request(request, course_id):
             return response
@@ -169,7 +191,7 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
         turnitin_client = TurnitinClient(request, request.user, course_id)
         return turnitin_client.get_similarity_report_status(submission_id)
 
-    def put(self, request, course_id: str, submission_id: str):
+    def put(self, request, course_id: str, submission_id: str) -> Response:
         """
         Handle the generation of a similarity report for a Turnitin submission.
         """
@@ -204,6 +226,10 @@ class TurnitinViewerAPIView(GenericAPIView):
             * 404: The course is not found.
 
             * 200: The similarity viewer was successfully created.
+
+                The response will contain the following information:
+
+                * viewer_url (str): The URL for the similarity viewer.
     """
 
     authentication_classes = (
@@ -212,7 +238,7 @@ class TurnitinViewerAPIView(GenericAPIView):
     )
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, course_id: str, submission_id: str):
+    def get(self, request, course_id: str, submission_id: str) -> Response:
         """
         Handle the creation of a Turnitin similarity viewer.
         """
@@ -265,9 +291,6 @@ class TurnitinClient:
     def accept_eula_agreement(self) -> RequestsResponse:
         """
         Submit acceptance of the EULA for the current user.
-
-        Args:
-            user_data (dict): A dictionary containing user data
 
         Returns:
             RequestsResponse: The response after accepting the EULA.
