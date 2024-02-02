@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('platform_plugin_turnitin', '0002_alter_turnitinsubmission_user'),
+        ("platform_plugin_turnitin", "0002_alter_turnitinsubmission_user"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='turnitinsubmission',
-            name='ora_submission_id',
+            model_name="turnitinsubmission",
+            name="ora_submission_id",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

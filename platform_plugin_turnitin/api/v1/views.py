@@ -4,18 +4,14 @@ from __future__ import annotations
 
 from django.conf import settings
 from django.db.models.query import QuerySet
-from edx_rest_framework_extensions.auth.session.authentication import (
-    SessionAuthenticationAllowInactiveUser,
-)
+from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
 from requests import Response as RequestsResponse
 from rest_framework import permissions, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from platform_plugin_turnitin.api.utils import api_error, get_fullname, validate_request
-from platform_plugin_turnitin.edxapp_wrapper import (
-    BearerAuthenticationAllowInactiveUser,
-)
+from platform_plugin_turnitin.edxapp_wrapper import BearerAuthenticationAllowInactiveUser
 from platform_plugin_turnitin.models import TurnitinSubmission
 from platform_plugin_turnitin.turnitin_client.handlers import (
     get_similarity_report_info,
