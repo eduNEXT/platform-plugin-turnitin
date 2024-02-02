@@ -5,3 +5,6 @@ Django                  # Web application framework
 requests                # HTTP requests
 djangorestframework     # RESTful API framework
 edx-drf-extensions      # Extensions to Django REST Framework for edX
+celery                  # Asynchronous task queue
+edx-submissions         # Submissions API for edX
+attrs                   # Classes without boilerplate

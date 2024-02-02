@@ -4,6 +4,10 @@
 #
 #    make upgrade
 #
+amqp==5.2.0
+    # via
+    #   -r requirements/test.txt
+    #   kombu
 asgiref==3.7.2
     # via
     #   -r requirements/test.txt
@@ -12,6 +16,20 @@ astroid==3.0.2
     # via
     #   pylint
     #   pylint-celery
+attrs==23.2.0
+    # via -r requirements/test.txt
+backports-zoneinfo[tzdata]==0.2.1
+    # via
+    #   -r requirements/test.txt
+    #   backports-zoneinfo
+    #   celery
+    #   kombu
+billiard==4.2.0
+    # via
+    #   -r requirements/test.txt
+    #   celery
+celery==5.3.6
+    # via -r requirements/test.txt
 certifi==2023.11.17
     # via
     #   -r requirements/test.txt
@@ -28,13 +46,29 @@ charset-normalizer==3.3.2
 click==8.1.7
     # via
     #   -r requirements/test.txt
+    #   celery
+    #   click-didyoumean
     #   click-log
+    #   click-plugins
+    #   click-repl
     #   code-annotations
     #   edx-django-utils
     #   edx-lint
+click-didyoumean==0.3.0
+    # via
+    #   -r requirements/test.txt
+    #   celery
 click-log==0.4.0
     # via edx-lint
-code-annotations==1.5.0
+click-plugins==1.1.1
+    # via
+    #   -r requirements/test.txt
+    #   celery
+click-repl==0.3.0
+    # via
+    #   -r requirements/test.txt
+    #   celery
+code-annotations==1.6.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -54,15 +88,22 @@ django==3.2.23
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.txt
     #   django-crum
+    #   django-model-utils
     #   django-waffle
     #   djangorestframework
     #   drf-jwt
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-submissions
+    #   jsonfield
 django-crum==0.7.9
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
+django-model-utils==4.3.1
+    # via
+    #   -r requirements/test.txt
+    #   edx-submissions
 django-waffle==4.1.0
     # via
     #   -r requirements/test.txt
@@ -73,6 +114,7 @@ djangorestframework==3.14.0
     #   -r requirements/test.txt
     #   drf-jwt
     #   edx-drf-extensions
+    #   edx-submissions
 drf-jwt==1.19.2
     # via
     #   -r requirements/test.txt
@@ -89,6 +131,8 @@ edx-opaque-keys==2.5.1
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
+edx-submissions==3.6.0
+    # via -r requirements/test.txt
 exceptiongroup==1.2.0
     # via
     #   -r requirements/test.txt
@@ -109,6 +153,14 @@ jinja2==3.1.3
     # via
     #   -r requirements/test.txt
     #   code-annotations
+jsonfield==3.1.0
+    # via
+    #   -r requirements/test.txt
+    #   edx-submissions
+kombu==5.3.5
+    # via
+    #   -r requirements/test.txt
+    #   celery
 markupsafe==2.1.4
     # via
     #   -r requirements/test.txt
@@ -127,12 +179,16 @@ pbr==6.0.0
     # via
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==4.1.0
+platformdirs==4.2.0
     # via pylint
 pluggy==1.4.0
     # via
     #   -r requirements/test.txt
     #   pytest
+prompt-toolkit==3.0.43
+    # via
+    #   -r requirements/test.txt
+    #   click-repl
 psutil==5.9.8
     # via
     #   -r requirements/test.txt
@@ -182,15 +238,20 @@ pytest-cov==4.1.0
     # via -r requirements/test.txt
 pytest-django==4.8.0
     # via -r requirements/test.txt
-python-slugify==8.0.2
+python-dateutil==2.8.2
+    # via
+    #   -r requirements/test.txt
+    #   celery
+python-slugify==8.0.3
     # via
     #   -r requirements/test.txt
     #   code-annotations
-pytz==2023.4
+pytz==2024.1
     # via
     #   -r requirements/test.txt
     #   django
     #   djangorestframework
+    #   edx-submissions
 pyyaml==6.0.1
     # via
     #   -r requirements/test.txt
@@ -204,7 +265,10 @@ semantic-version==2.10.0
     #   -r requirements/test.txt
     #   edx-drf-extensions
 six==1.16.0
-    # via edx-lint
+    # via
+    #   -r requirements/test.txt
+    #   edx-lint
+    #   python-dateutil
 snowballstemmer==2.2.0
     # via pydocstyle
 sqlparse==0.4.4
@@ -235,8 +299,24 @@ typing-extensions==4.9.0
     #   asgiref
     #   astroid
     #   edx-opaque-keys
+    #   kombu
     #   pylint
+tzdata==2023.4
+    # via
+    #   -r requirements/test.txt
+    #   backports-zoneinfo
+    #   celery
 urllib3==2.2.0
     # via
     #   -r requirements/test.txt
     #   requests
+vine==5.1.0
+    # via
+    #   -r requirements/test.txt
+    #   amqp
+    #   celery
+    #   kombu
+wcwidth==0.2.13
+    # via
+    #   -r requirements/test.txt
+    #   prompt-toolkit
