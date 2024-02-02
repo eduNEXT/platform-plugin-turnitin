@@ -1,4 +1,4 @@
-"""Event handlers for the Turnitin plugin. """
+"""Event handlers for the Turnitin plugin."""
 
 from platform_plugin_turnitin.tasks import ora_submission_created_task
 
