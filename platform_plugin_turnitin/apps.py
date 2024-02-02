@@ -33,4 +33,15 @@ class PlatformPluginTurnitinConfig(AppConfig):
                 "production": {"relative_path": "settings.production"},
             },
         },
+        "signals_config": {
+            "lms.djangoapp": {
+                "relative_path": "tasks",
+                "receivers": [
+                    {
+                        "receiver_func_name": "ora_submission_created",
+                        "signal_path": "openedx_events.learning.signals.ORA_SUBMISSION_CREATED",
+                    },
+                ],
+            }
+        },
     }
