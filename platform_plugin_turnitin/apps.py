@@ -35,7 +35,7 @@ class PlatformPluginTurnitinConfig(AppConfig):
         },
         "signals_config": {
             "lms.djangoapp": {
-                "relative_path": "tasks",
+                "relative_path": "handlers",
                 "receivers": [
                     {
                         "receiver_func_name": "ora_submission_created",

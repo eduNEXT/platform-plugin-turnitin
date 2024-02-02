@@ -15,17 +15,15 @@ from platform_plugin_turnitin.edxapp_wrapper import user_by_anonymous_id
 
 
 @shared_task
-def ora_submission_created(submission, **kwargs):
+def ora_submission_created_task(submission_id: str, file_downloads: list) -> None:
     """
     Task to handle the creation of a new ora submission.
 
     Args:
-        submission (ORASubmissionData): The submission object.
-        **kwargs: Additional keyword arguments.
+        submission_id (str): The ORA submission ID.
+        file_downloads (list): The list of file downloads.
     """
-    submission_id = submission.id
     print(f"\n\nORA Submission ID: {submission_id}\n\n")
-    file_downloads = submission.file_downloads
 
     submission_data = dict(submissions_api.get_submission_and_student(submission_id))
     user = user_by_anonymous_id(submission_data["student_item"]["student_id"])
