@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 import requests
 
-# from celery import shared_task
+from celery import shared_task
 from django.conf import settings
 from rest_framework import status
 from submissions import api as submissions_api
@@ -14,7 +14,7 @@ from platform_plugin_turnitin.api.v1.views import TurnitinClient
 from platform_plugin_turnitin.edxapp_wrapper import user_by_anonymous_id
 
 
-# @shared_task
+@shared_task
 def ora_submission_created(submission, **kwargs):
     """
     Task to handle the creation of a new ora submission.
