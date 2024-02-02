@@ -9,7 +9,9 @@ amqp==5.2.0
 asgiref==3.7.2
     # via django
 attrs==23.2.0
-    # via -r requirements/base.in
+    # via
+    #   -r requirements/base.in
+    #   openedx-events
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   celery
@@ -18,7 +20,7 @@ billiard==4.2.0
     # via celery
 celery==5.3.6
     # via -r requirements/base.in
-certifi==2023.11.17
+certifi==2024.2.2
     # via requests
 cffi==1.16.0
     # via
@@ -54,6 +56,7 @@ django==3.2.23
     #   edx-drf-extensions
     #   edx-submissions
     #   jsonfield
+    #   openedx-events
 django-crum==0.7.9
     # via edx-django-utils
 django-model-utils==4.3.1
@@ -74,10 +77,14 @@ edx-django-utils==5.10.1
     # via edx-drf-extensions
 edx-drf-extensions==10.1.0
     # via -r requirements/base.in
-edx-opaque-keys==2.5.1
-    # via edx-drf-extensions
+edx-opaque-keys[django]==2.5.1
+    # via
+    #   edx-drf-extensions
+    #   openedx-events
 edx-submissions==3.6.0
     # via -r requirements/base.in
+fastavro==1.9.3
+    # via openedx-events
 idna==3.6
     # via requests
 jsonfield==3.1.0
@@ -86,6 +93,8 @@ kombu==5.3.5
     # via celery
 newrelic==9.6.0
     # via edx-django-utils
+openedx-events==9.4.0
+    # via -r requirements/base.in
 pbr==6.0.0
     # via stevedore
 prompt-toolkit==3.0.43

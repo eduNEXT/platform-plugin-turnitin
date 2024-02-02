@@ -17,7 +17,9 @@ asgiref==3.7.2
     #   -r requirements/test.txt
     #   django
 attrs==23.2.0
-    # via -r requirements/test.txt
+    # via
+    #   -r requirements/test.txt
+    #   openedx-events
 babel==2.14.0
     # via
     #   pydata-sphinx-theme
@@ -38,7 +40,7 @@ build==1.0.3
     # via -r requirements/doc.in
 celery==5.3.6
     # via -r requirements/test.txt
-certifi==2023.11.17
+certifi==2024.2.2
     # via
     #   -r requirements/test.txt
     #   requests
@@ -97,6 +99,7 @@ django==3.2.23
     #   edx-drf-extensions
     #   edx-submissions
     #   jsonfield
+    #   openedx-events
 django-crum==0.7.9
     # via
     #   -r requirements/test.txt
@@ -135,16 +138,22 @@ edx-django-utils==5.10.1
     #   edx-drf-extensions
 edx-drf-extensions==10.1.0
     # via -r requirements/test.txt
-edx-opaque-keys==2.5.1
+edx-opaque-keys[django]==2.5.1
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
+    #   edx-opaque-keys
+    #   openedx-events
 edx-submissions==3.6.0
     # via -r requirements/test.txt
 exceptiongroup==1.2.0
     # via
     #   -r requirements/test.txt
     #   pytest
+fastavro==1.9.3
+    # via
+    #   -r requirements/test.txt
+    #   openedx-events
 idna==3.6
     # via
     #   -r requirements/test.txt
@@ -200,6 +209,8 @@ newrelic==9.6.0
     #   edx-django-utils
 nh3==0.2.15
     # via readme-renderer
+openedx-events==9.4.0
+    # via -r requirements/test.txt
 packaging==23.2
     # via
     #   -r requirements/test.txt
