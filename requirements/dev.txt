@@ -12,7 +12,7 @@ asgiref==3.7.2
     # via
     #   -r requirements/quality.txt
     #   django
-astroid==3.0.2
+astroid==3.0.3
     # via
     #   -r requirements/quality.txt
     #   pylint
@@ -207,7 +207,7 @@ kombu==5.3.5
     #   celery
 lxml==5.1.0
     # via edx-i18n-tools
-markupsafe==2.1.4
+markupsafe==2.1.5
     # via
     #   -r requirements/quality.txt
     #   jinja2
@@ -221,7 +221,7 @@ newrelic==9.6.0
     # via
     #   -r requirements/quality.txt
     #   edx-django-utils
-openedx-events==9.4.0
+openedx-events @ git+https://github.com/edunext/openedx-events.git@bav/ora-submission-created-event
     # via -r requirements/quality.txt
 packaging==23.2
     # via
@@ -232,7 +232,7 @@ packaging==23.2
     #   build
     #   pytest
     #   tox
-path==16.9.0
+path==16.10.0
     # via edx-i18n-tools
 pathspec==0.12.1
     # via black

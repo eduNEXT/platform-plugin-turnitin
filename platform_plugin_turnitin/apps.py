@@ -39,7 +39,7 @@ class PlatformPluginTurnitinConfig(AppConfig):
                 "receivers": [
                     {
                         "receiver_func_name": "ora_submission_created",
-                        "signal_path": "platform_plugin_turnitin.events.signals.ORA_SUBMISSION_CREATED",
+                        "signal_path": "openedx_events.learning.signals.ORA_SUBMISSION_CREATED",
                     },
                 ],
             }

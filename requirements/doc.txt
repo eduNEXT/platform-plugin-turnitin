@@ -195,7 +195,7 @@ kombu==5.3.5
     #   celery
 markdown-it-py==3.0.0
     # via rich
-markupsafe==2.1.4
+markupsafe==2.1.5
     # via
     #   -r requirements/test.txt
     #   jinja2
@@ -209,7 +209,7 @@ newrelic==9.6.0
     #   edx-django-utils
 nh3==0.2.15
     # via readme-renderer
-openedx-events==9.4.0
+openedx-events @ git+https://github.com/edunext/openedx-events.git@bav/ora-submission-created-event
     # via -r requirements/test.txt
 packaging==23.2
     # via

@@ -93,7 +93,7 @@ kombu==5.3.5
     # via celery
 newrelic==9.6.0
     # via edx-django-utils
-openedx-events==9.4.0
+openedx-events @ git+https://github.com/edunext/openedx-events.git@bav/ora-submission-created-event
     # via -r requirements/base.in
 pbr==6.0.0
     # via stevedore
