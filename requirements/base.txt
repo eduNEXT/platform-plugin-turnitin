@@ -57,6 +57,7 @@ django==3.2.24
     #   edx-submissions
     #   jsonfield
     #   openedx-events
+    #   openedx-filters
 django-crum==0.7.9
     # via edx-django-utils
 django-model-utils==4.3.1
@@ -94,6 +95,8 @@ kombu==5.3.5
 newrelic==9.6.0
     # via edx-django-utils
 openedx-events @ git+https://github.com/edunext/openedx-events.git@9.4.0/edues
+    # via -r requirements/base.in
+openedx-filters @ git+https://github.com/edunext/openedx-filters.git@bav/ora-student-view-filter
     # via -r requirements/base.in
 pbr==6.0.0
     # via stevedore

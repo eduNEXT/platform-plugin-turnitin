@@ -9,3 +9,4 @@ celery                  # Asynchronous task queue
 edx-submissions         # Submissions API for edX
 attrs                   # Classes without boilerplate
 openedx-events @ git+https://github.com/edunext/openedx-events.git@9.4.0/edues # Open edX event tracking
+openedx-filters @ git+https://github.com/edunext/openedx-filters.git@bav/ora-student-view-filter # Open edX filters

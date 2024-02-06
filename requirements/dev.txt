@@ -122,6 +122,7 @@ django==3.2.24
     #   edx-submissions
     #   jsonfield
     #   openedx-events
+    #   openedx-filters
 django-crum==0.7.9
     # via
     #   -r requirements/quality.txt
@@ -222,6 +223,8 @@ newrelic==9.6.0
     #   -r requirements/quality.txt
     #   edx-django-utils
 openedx-events @ git+https://github.com/edunext/openedx-events.git@9.4.0/edues
+    # via -r requirements/quality.txt
+openedx-filters @ git+https://github.com/edunext/openedx-filters.git@bav/ora-student-view-filter
     # via -r requirements/quality.txt
 packaging==23.2
     # via
