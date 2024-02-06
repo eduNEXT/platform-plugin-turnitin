@@ -112,7 +112,7 @@ edx-django-utils==5.10.1
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-edx-drf-extensions==10.1.0
+edx-drf-extensions==10.2.0
     # via -r requirements/base.txt
 edx-opaque-keys[django]==2.5.1
     # via
@@ -150,7 +150,7 @@ newrelic==9.6.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-openedx-events @ git+https://github.com/edunext/openedx-events.git@bav/ora-submission-created-event
+openedx-events @ git+https://github.com/edunext/openedx-events.git@9.4.0/edues
     # via -r requirements/base.txt
 packaging==23.2
     # via pytest
