@@ -22,5 +22,5 @@ class CheckTurnitinForPlagiarism(PipelineStep):
         """
         return {
             "context": context,
-            "template_name": "turnitin/ora.html",
+            "template_name": "turnitin/oa_response.html",
         }
