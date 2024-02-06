@@ -1,6 +1,7 @@
 """
 Production Django settings for platform_plugin_turnitin project.
 """
+
 from platform_plugin_turnitin import ROOT_DIRECTORY
 
 
