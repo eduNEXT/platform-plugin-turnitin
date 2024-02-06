@@ -9,9 +9,7 @@ amqp==5.2.0
 asgiref==3.7.2
     # via django
 attrs==23.2.0
-    # via
-    #   -r requirements/base.in
-    #   openedx-events
+    # via openedx-events
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   celery
