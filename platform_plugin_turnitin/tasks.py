@@ -2,6 +2,7 @@
 
 import tempfile
 from logging import getLogger
+from time import sleep
 from typing import List
 from urllib.parse import urljoin
 
@@ -13,7 +14,12 @@ from rest_framework.response import Response
 from submissions import api as submissions_api
 
 from platform_plugin_turnitin.api.v1.views import TurnitinClient
-from platform_plugin_turnitin.constants import ALLOWED_FILE_EXTENSIONS
+from platform_plugin_turnitin.constants import (
+    ALLOWED_FILE_EXTENSIONS,
+    MAX_REQUEST_RETRIES,
+    REQUEST_TIMEOUT,
+    SECONDS_TO_WAIT_BETWEEN_RETRIES,
+)
 from platform_plugin_turnitin.edxapp_wrapper import user_by_anonymous_id
 
 log = getLogger(__name__)
@@ -34,8 +40,11 @@ def ora_submission_created_task(submission_id: str, file_downloads: List[dict]) 
     send_text_to_turnitin(submission_id, user, submission_data["answer"])
     send_uploaded_files_to_turnitin(submission_id, user, file_downloads)
 
-    if is_submission_complete(submission_id, user):
-        generate_similarity_report(submission_id, user)
+    for _ in range(MAX_REQUEST_RETRIES):
+        if is_submission_complete(submission_id, user):
+            generate_similarity_report(submission_id, user)
+            break
+        sleep(SECONDS_TO_WAIT_BETWEEN_RETRIES)
 
 
 def send_text_to_turnitin(submission_id: str, user, answer: dict) -> None:
@@ -70,7 +79,7 @@ def send_uploaded_files_to_turnitin(
         file_extension = filename.split(".")[-1]
         if file_extension in ALLOWED_FILE_EXTENSIONS:
             file_link = urljoin(base_url, file.get("download_url"))
-            response = requests.get(file_link, timeout=5)
+            response = requests.get(file_link, timeout=REQUEST_TIMEOUT)
 
             if response.ok:
                 send_file_to_turnitin(submission_id, user, response.content, filename)
@@ -139,7 +148,7 @@ def is_submission_complete(ora_submission_id: str, user) -> bool:
     submission_response = get_submission_status(ora_submission_id, user)
 
     if submission_response.status_code != status.HTTP_200_OK:
-        raise Exception("Failed to retrieve the submission status.")
+        return False
 
     is_complete = all(
         submission.get("status") in ["COMPLETE", "ERROR"]
@@ -149,9 +158,9 @@ def is_submission_complete(ora_submission_id: str, user) -> bool:
     if is_complete:
         log.info(f"Submission [{ora_submission_id}] is complete.")
         return True
-    else:
-        log.info(f"Submission [{ora_submission_id}] is not complete. Checking again...")
-        return is_submission_complete(ora_submission_id, user)
+
+    log.info(f"Submission [{ora_submission_id}] is not complete. Checking again...")
+    return False
 
 
 def get_submission_status(ora_submission_id: str, user) -> Response:
