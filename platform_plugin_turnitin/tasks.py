@@ -8,6 +8,8 @@ from urllib.parse import urljoin
 import requests
 from celery import shared_task
 from django.conf import settings
+from rest_framework import status
+from rest_framework.response import Response
 from submissions import api as submissions_api
 
 from platform_plugin_turnitin.api.v1.views import TurnitinClient
@@ -31,6 +33,9 @@ def ora_submission_created_task(submission_id: str, file_downloads: List[dict]) 
 
     send_text_to_turnitin(submission_id, user, submission_data["answer"])
     send_uploaded_files_to_turnitin(submission_id, user, file_downloads)
+
+    if is_submission_complete(submission_id, user):
+        generate_similarity_report(submission_id, user)
 
 
 def send_text_to_turnitin(submission_id: str, user, answer: dict) -> None:
@@ -99,14 +104,14 @@ def send_file_to_turnitin(
         upload_turnitin_submission(submission_id, user, temp_file)
 
 
-def upload_turnitin_submission(submission_id: str, user, file) -> None:
+def upload_turnitin_submission(ora_submission_id: str, user, file) -> None:
     """
     Create a new submission in Turnitin.
 
     First, the user must accept the EULA agreement. Then, the file is uploaded to Turnitin.
 
     Args:
-        submission_id (str): The ORA submission ID.
+        ora_submission_id (str): The ORA submission ID.
         user (User): The user who made the submission.
         file (File): The file to upload.
     """
@@ -117,4 +122,60 @@ def upload_turnitin_submission(submission_id: str, user, file) -> None:
     if not agreement_response.ok:
         raise Exception("Failed to accept the EULA agreement.")
 
-    turnitin_client.upload_turnitin_submission_file(submission_id)
+    turnitin_client.upload_turnitin_submission_file(ora_submission_id)
+
+
+def is_submission_complete(ora_submission_id: str, user) -> bool:
+    """
+    Check if the submission is complete.
+
+    Args:
+        ora_submission_id (str): The ORA submission ID.
+        user (User): The user who made the submission.
+
+    Returns:
+        bool: True if the submission is complete, False otherwise.
+    """
+    submission_response = get_submission_status(ora_submission_id, user)
+
+    if submission_response.status_code != status.HTTP_200_OK:
+        raise Exception("Failed to retrieve the submission status.")
+
+    is_complete = all(
+        submission.get("status") in ["COMPLETE", "ERROR"]
+        for submission in submission_response.data
+    )
+
+    if is_complete:
+        log.info(f"Submission [{ora_submission_id}] is complete.")
+        return True
+    else:
+        log.info(f"Submission [{ora_submission_id}] is not complete. Checking again...")
+        return is_submission_complete(ora_submission_id, user)
+
+
+def get_submission_status(ora_submission_id: str, user) -> Response:
+    """
+    Handle the retrieval of the submission information for a Turnitin submission.
+
+    Args:
+        ora_submission_id (str): The ORA submission ID.
+        user (User): The user who made the submission.
+
+    Returns:
+        Response: The response from the Turnitin API.
+    """
+    turnitin_client = TurnitinClient(user)
+    return turnitin_client.get_submission_status(ora_submission_id)
+
+
+def generate_similarity_report(ora_submission_id: str, user) -> None:
+    """
+    Generate the similarity report for a submission.
+
+    Args:
+        ora_submission_id (str): The ORA submission ID.
+        user (User): The user who made the submission.
+    """
+    turnitin_client = TurnitinClient(user)
+    turnitin_client.generate_similarity_report(ora_submission_id)
