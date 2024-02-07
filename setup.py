@@ -148,7 +148,10 @@ setup(
     ],
     entry_points={
         "lms.djangoapp": [
-            "platform_plugin_turnitin = platform_plugin_turnitin.apps:PlatformPluginTurnitinConfig"
+            "platform_plugin_turnitin = platform_plugin_turnitin.apps:PlatformPluginTurnitinConfig",
+        ],
+        "cms.djangoapp": [
+            "platform_plugin_turnitin = platform_plugin_turnitin.apps:PlatformPluginTurnitinConfig",
         ],
     },
 )

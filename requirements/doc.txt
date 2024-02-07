@@ -100,6 +100,7 @@ django==3.2.24
     #   edx-submissions
     #   jsonfield
     #   openedx-events
+    #   openedx-filters
 django-crum==0.7.9
     # via
     #   -r requirements/test.txt
@@ -210,6 +211,8 @@ newrelic==9.6.0
 nh3==0.2.15
     # via readme-renderer
 openedx-events @ git+https://github.com/edunext/openedx-events.git@9.4.0/edues
+    # via -r requirements/test.txt
+openedx-filters @ git+https://github.com/edunext/openedx-filters.git@1.6.0/edues
     # via -r requirements/test.txt
 packaging==23.2
     # via

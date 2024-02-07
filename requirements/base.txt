@@ -9,9 +9,7 @@ amqp==5.2.0
 asgiref==3.7.2
     # via django
 attrs==23.2.0
-    # via
-    #   -r requirements/base.in
-    #   openedx-events
+    # via openedx-events
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   celery
@@ -57,6 +55,7 @@ django==3.2.24
     #   edx-submissions
     #   jsonfield
     #   openedx-events
+    #   openedx-filters
 django-crum==0.7.9
     # via edx-django-utils
 django-model-utils==4.3.1
@@ -94,6 +93,8 @@ kombu==5.3.5
 newrelic==9.6.0
     # via edx-django-utils
 openedx-events @ git+https://github.com/edunext/openedx-events.git@9.4.0/edues
+    # via -r requirements/base.in
+openedx-filters @ git+https://github.com/edunext/openedx-filters.git@1.6.0/edues
     # via -r requirements/base.in
 pbr==6.0.0
     # via stevedore

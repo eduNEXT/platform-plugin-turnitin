@@ -7,5 +7,5 @@ djangorestframework     # RESTful API framework
 edx-drf-extensions      # Extensions to Django REST Framework for edX
 celery                  # Asynchronous task queue
 edx-submissions         # Submissions API for edX
-attrs                   # Classes without boilerplate
 openedx-events @ git+https://github.com/edunext/openedx-events.git@9.4.0/edues # Open edX event tracking
+openedx-filters @ git+https://github.com/edunext/openedx-filters.git@1.6.0/edues # Open edX filters
