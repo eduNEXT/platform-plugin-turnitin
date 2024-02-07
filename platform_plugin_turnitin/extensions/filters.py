@@ -3,15 +3,15 @@
 from openedx_filters import PipelineStep
 
 
-class CheckTurnitinForPlagiarism(PipelineStep):
-    """Check if Turnitin plagiarism check is enabled."""
+class ORASubmissionViewTurnitinWarning(PipelineStep):
+    """Add warning message about Turnitin to the ORA submission view."""
 
     def run_filter(  # pylint: disable=unused-argument, disable=arguments-differ
         self, context: dict, template_name: str
     ) -> dict:
         """
-        Execute filter that loads the template with a warning message that notifies the user
-        that the Turnitin plagiarism check is enabled.
+        Execute filter that loads the submission template with a warning message that
+        notifies the user that the submission will be sent to Turnitin.
 
         Args:
             context (dict): The context dictionary.
