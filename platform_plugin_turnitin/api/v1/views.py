@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from logging import getLogger
+
 from django.conf import settings
 from django.db.models.query import QuerySet
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
@@ -23,6 +25,8 @@ from platform_plugin_turnitin.turnitin_client.handlers import (
     put_upload_submission_file_content,
 )
 from platform_plugin_turnitin.utils import get_current_datetime
+
+log = getLogger(__name__)
 
 
 class TurnitinUploadFileAPIView(GenericAPIView):
@@ -242,6 +246,7 @@ class TurnitinViewerAPIView(GenericAPIView):
                 The response will contain a list with the following information:
 
                 * viewer_url (str): The URL for the similarity viewer.
+                * file_name (str): The name of the file that was submitted.
     """
 
     authentication_classes = (
@@ -330,6 +335,7 @@ class TurnitinClient:
                 user=self.user,
                 ora_submission_id=ora_submission_id,
                 turnitin_submission_id=turnitin_submission_id,
+                file_name=self.file.name,
             )
             submission.save()
             return Response(
@@ -452,7 +458,7 @@ class TurnitinClient:
                 the Open Response Assessment (ORA) system.
 
         Returns:
-            Response: Contains the URL for the similarity viewer.
+            Response: Contains the URL for the similarity viewer and the file name.
         """
         submissions = self.get_submissions(ora_submission_id)
         if isinstance(submissions, Response):
@@ -482,8 +488,19 @@ class TurnitinClient:
         for submission in submissions:
             response = post_create_viewer_launch_url(
                 submission.turnitin_submission_id, payload
+            ).json()
+            if "viewer_url" not in response:
+                log.info(
+                    f"Failed to create viewer URL for submission [{submission.turnitin_submission_id}]. \
+                    Turnitin response: {response}"
+                )
+                continue
+            response_list.append(
+                {
+                    "url": response.get("viewer_url"),
+                    "file_name": submission.file_name,
+                }
             )
-            response_list.append(response.json())
 
         return Response(response_list)
 

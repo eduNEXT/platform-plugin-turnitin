@@ -58,7 +58,9 @@ def send_text_to_turnitin(submission_id: str, user, answer: dict) -> None:
     """
     for part in answer["parts"]:
         text_content = part.get("text").encode("utf-8")
-        send_file_to_turnitin(submission_id, user, text_content, "response.txt")
+        send_file_to_turnitin(
+            submission_id, user, text_content, "Students' Text Response.txt"
+        )
 
 
 def send_uploaded_files_to_turnitin(
