@@ -69,7 +69,7 @@ def validate_request(
     Error responses are returned if:
     - The course ID is invalid.
     - The course is not found.
-    - The user does not have access to generate credentials.
+    - The user does not have access to consume the endpoint
 
     Args:
         request (Request): The request object.
@@ -108,7 +108,7 @@ def validate_request(
 
     if not user_has_access:
         return api_error(
-            "The user does not have access to generate credentials.",
+            "The user does not have access to consume the endpoint.",
             status_code=status.HTTP_403_FORBIDDEN,
         )
 

@@ -26,8 +26,11 @@ def plugin_settings(settings):
         "TURNITIN_TCA_API_KEY", settings.TURNITIN_TCA_API_KEY
     )
 
-    settings.TURNITIN_SIMILARY_REPORT_PAYLOAD = getattr(settings, "ENV_TOKENS", {}).get(
-        "TURNITIN_SIMILARY_REPORT_PAYLOAD", settings.TURNITIN_SIMILARY_REPORT_PAYLOAD
+    settings.TURNITIN_SIMILARITY_REPORT_PAYLOAD = getattr(
+        settings, "ENV_TOKENS", {}
+    ).get(
+        "TURNITIN_SIMILARITY_REPORT_PAYLOAD",
+        settings.TURNITIN_SIMILARITY_REPORT_PAYLOAD,
     )
 
     settings.TURNITIN_API_TIMEOUT = getattr(settings, "ENV_TOKENS", {}).get(

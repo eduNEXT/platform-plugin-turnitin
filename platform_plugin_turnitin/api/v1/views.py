@@ -10,6 +10,7 @@ from edx_rest_framework_extensions.auth.session.authentication import SessionAut
 from requests import Response as RequestsResponse
 from rest_framework import permissions, status
 from rest_framework.generics import GenericAPIView
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from platform_plugin_turnitin.api.utils import api_error, get_fullname, validate_request
@@ -58,7 +59,9 @@ class TurnitinUploadFileAPIView(GenericAPIView):
     )
     permission_classes = (permissions.IsAuthenticated,)
 
-    def post(self, request, course_id: str, ora_submission_id: str) -> Response:
+    def post(
+        self, request: Request, course_id: str, ora_submission_id: str
+    ) -> Response:
         """
         Handle the upload of the user's file to Turnitin.
         """
@@ -68,7 +71,7 @@ class TurnitinUploadFileAPIView(GenericAPIView):
         turnitin_client = TurnitinClient(request.user, request.FILES.get("file"))
         agreement_response = turnitin_client.accept_eula_agreement()
 
-        if agreement_response.status_code != status.HTTP_200_OK:
+        if not agreement_response.ok:
             return api_error(agreement_response.json(), agreement_response.status_code)
 
         return turnitin_client.upload_turnitin_submission_file(ora_submission_id)
@@ -121,7 +124,7 @@ class TurnitinSubmissionAPIView(GenericAPIView):
     )
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, course_id: str, ora_submission_id: str) -> Response:
+    def get(self, request: Request, course_id: str, ora_submission_id: str) -> Response:
         """
         Handle the retrieval of the submission information for a Turnitin submission.
         """
@@ -195,7 +198,7 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
     )
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, course_id: str, ora_submission_id: str) -> Response:
+    def get(self, request: Request, course_id: str, ora_submission_id: str) -> Response:
         """
         Handle the retrieval of the similarity report status for a Turnitin submission.
         """
@@ -205,7 +208,7 @@ class TurnitinSimilarityReportAPIView(GenericAPIView):
         turnitin_client = TurnitinClient(request.user)
         return turnitin_client.get_similarity_report_status(ora_submission_id)
 
-    def put(self, request, course_id: str, ora_submission_id: str) -> Response:
+    def put(self, request: Request, course_id: str, ora_submission_id: str) -> Response:
         """
         Handle the generation of a similarity report for a Turnitin submission.
         """
@@ -255,7 +258,7 @@ class TurnitinViewerAPIView(GenericAPIView):
     )
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, course_id: str, ora_submission_id: str) -> Response:
+    def get(self, request: Request, course_id: str, ora_submission_id: str) -> Response:
         """
         Handle the creation of a Turnitin similarity viewer.
         """
@@ -417,7 +420,7 @@ class TurnitinClient:
         if isinstance(submissions, Response):
             return submissions
 
-        payload = getattr(settings, "TURNITIN_SIMILARY_REPORT_PAYLOAD", None)
+        payload = getattr(settings, "TURNITIN_SIMILARITY_REPORT_PAYLOAD", None)
         response_list = []
         for submission in submissions:
             response = put_generate_similarity_report(

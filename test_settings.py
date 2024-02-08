@@ -72,3 +72,4 @@ PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND = (
 PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND = (
     "platform_plugin_turnitin.edxapp_wrapper.backends.course_overviews_q_v1_test"
 )
+TURNITIN_SIMILARITY_REPORT_PAYLOAD = {"test_key": "test_value"}

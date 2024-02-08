@@ -43,7 +43,7 @@ def plugin_settings(settings):
     settings.TURNITIN_TCA_INTEGRATION_FAMILY = None
     settings.TURNITIN_TCA_INTEGRATION_VERSION = None
     settings.TURNITIN_TCA_API_KEY = None
-    settings.TURNITIN_SIMILARY_REPORT_PAYLOAD = {
+    settings.TURNITIN_SIMILARITY_REPORT_PAYLOAD = {
         "indexing_settings": {"add_to_index": True},
         "generation_settings": {
             "search_repositories": [
