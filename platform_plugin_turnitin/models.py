@@ -26,6 +26,7 @@ class TurnitinSubmission(models.Model):
         User, on_delete=models.CASCADE, related_name="turnitin_submissions"
     )
     ora_submission_id = models.CharField(max_length=255, blank=True, null=True)
+    file_name = models.CharField(max_length=255, blank=True, null=True)
     turnitin_submission_id = models.CharField(max_length=255, blank=True, null=True)
     turnitin_submission_pdf_id = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
