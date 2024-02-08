@@ -31,6 +31,13 @@ class TestTurnitinClient(TestCase):
     def test_accept_eula_agreement(
         self, mock_post_accept: Mock, mock_get_current_datetime: Mock
     ):
+        """
+        Test the `accept_eula_agreement` method.
+
+        Expected result:
+            - `post_accept_eula_version` function is called with the correct payload
+            - `accept_eula_agreement` method returns the correct response.
+        """
         current_datetime = "2023-11-21T15:30:00Z"
         mock_get_current_datetime.return_value = current_datetime
         expected_payload = {
@@ -57,6 +64,15 @@ class TestTurnitinClient(TestCase):
         mock_model: Mock,
         mock_put_upload_file: Mock,
     ):
+        """
+        Test the `upload_turnitin_submission_file` method.
+
+        Expected result:
+            - `create_turnitin_submission_object` function is called
+            - `TurnitinSubmission` model is created with the correct parameters
+            - `put_upload_submission_file_content` function is called with the correct parameters
+            - `upload_turnitin_submission_file` method returns the correct response.
+        """
         mock_create_turnitin_submission.return_value = Mock(
             status_code=status.HTTP_201_CREATED,
             json=Mock(return_value={"id": self.turnitin_submission_id}),
@@ -88,6 +104,14 @@ class TestTurnitinClient(TestCase):
         mock_response: Mock,
         mock_put_upload_file: Mock,
     ):
+        """
+        Test the `upload_turnitin_submission_file` method with error response.
+
+        Expected result:
+            - `create_turnitin_submission_object` function is called
+            - `put_upload_submission_file_content` function is not called
+            - `upload_turnitin_submission_file` method returns the correct response.
+        """
         mock_create_turnitin_submission.return_value = Mock(
             status_code=status.HTTP_400_BAD_REQUEST,
             json=Mock(return_value={"error": "Bad request"}),
@@ -109,6 +133,12 @@ class TestTurnitinClient(TestCase):
     def test_create_turnitin_submission_object(
         self, mock_post_create: Mock, mock_get_current_datetime: Mock
     ):
+        """
+        Test the `create_turnitin_submission_object` method.
+
+        Expected result:
+            - `post_create_submission` function is called with the correct payload
+        """
         current_datetime = "2023-11-21T16:00:00Z"
         mock_get_current_datetime.return_value = current_datetime
         expected_response = Mock(status_code=status.HTTP_201_CREATED)
@@ -149,6 +179,14 @@ class TestTurnitinClient(TestCase):
     def test_get_submission_status_success(
         self, mock_get_submissions: Mock, mock_get_submission_info: Mock
     ):
+        """
+        Test the `get_submission_status` method.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `get_submission_info` function is called the correct number of
+                times with the correct parameters
+        """
         turnitin_submission_1 = Mock(turnitin_submission_id="id1")
         turnitin_submission_2 = Mock(turnitin_submission_id="id2")
         mock_get_submissions.return_value = [
@@ -167,20 +205,39 @@ class TestTurnitinClient(TestCase):
             result.data, [{"status": "COMPLETED"}, {"status": "PROCESSING"}]
         )
 
+    @patch(f"{VIEWS_MODULE_PATH}.get_submission_info")
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.get_submissions")
-    def test_get_submission_status_error_response(self, mock_get_submissions: Mock):
+    def test_get_submission_status_error_response(
+        self, mock_get_submissions: Mock, mock_get_submission_info: Mock
+    ):
+        """
+        Test the `get_submission_status` method with error response.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `get_submission_info` function is not called
+        """
         error_response = Response(status=status.HTTP_400_BAD_REQUEST)
         mock_get_submissions.return_value = error_response
 
         response = self.turnitin_client.get_submission_status(self.ora_submission_id)
 
         self.assertEqual(response, error_response)
+        mock_get_submission_info.assert_not_called()
 
     @patch(f"{VIEWS_MODULE_PATH}.put_generate_similarity_report")
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.get_submissions")
     def test_generate_similarity_report_success(
         self, mock_get_submissions: Mock, mock_put_generate: Mock
     ):
+        """
+        Test the `generate_similarity_report` method.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `put_generate_similarity_report` function is called the correct number of
+                times with the correct parameters
+        """
         turnitin_submission_1 = Mock(turnitin_submission_id="id1")
         turnitin_submission_2 = Mock(turnitin_submission_id="id2")
         mock_get_submissions.return_value = [
@@ -208,6 +265,13 @@ class TestTurnitinClient(TestCase):
     def test_generate_similarity_report_error_response(
         self, mock_get_submissions: Mock
     ):
+        """
+        Test the `generate_similarity_report` method with error response.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `generate_similarity_report` method returns the correct response.
+        """
         error_response = Response(status=status.HTTP_400_BAD_REQUEST)
         mock_get_submissions.return_value = error_response
 
@@ -220,6 +284,14 @@ class TestTurnitinClient(TestCase):
     def test_get_similarity_report_status_success(
         self, mock_get_submissions: Mock, mock_get_report_info: Mock
     ):
+        """
+        Test the `get_similarity_report_status` method.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `get_similarity_report_info` function is called the correct number of
+                times with the correct parameters
+        """
         turnitin_submission_1 = Mock(turnitin_submission_id="id1")
         turnitin_submission_2 = Mock(turnitin_submission_id="id2")
         mock_get_submissions.return_value = [
@@ -244,6 +316,13 @@ class TestTurnitinClient(TestCase):
     def test_get_similarity_report_status_error_response(
         self, mock_get_submissions: Mock
     ):
+        """
+        Test the `get_similarity_report_status` method with error response.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `get_similarity_report_status` method returns error response.
+        """
         error_response = Response(status=status.HTTP_400_BAD_REQUEST)
         mock_get_submissions.return_value = error_response
 
@@ -258,6 +337,14 @@ class TestTurnitinClient(TestCase):
     def test_create_similarity_viewer_success(
         self, mock_get_submissions: Mock, mock_post_create: Mock
     ):
+        """
+        Test the `create_similarity_viewer` method.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `post_create_viewer_launch_url` function is called the correct number of
+                times with the correct parameters
+        """
         turnitin_submission_1 = Mock(turnitin_submission_id="id1", file_name="file1")
         turnitin_submission_2 = Mock(turnitin_submission_id="id2", file_name="file2")
         mock_get_submissions.return_value = [
@@ -307,6 +394,16 @@ class TestTurnitinClient(TestCase):
     def test_create_similarity_viewer_skip_not_success(
         self, mock_get_submissions: Mock, mock_post_create: Mock
     ):
+        """
+        Test the `create_similarity_viewer` method with submissions that are not in
+        success status.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `post_create_viewer_launch_url` function is called the correct number of
+                times with the correct parameters
+            - `create_similarity_viewer` method returns the correct response.
+        """
         turnitin_submission_1 = Mock(turnitin_submission_id="id1", file_name="file1")
         turnitin_submission_2 = Mock(turnitin_submission_id="id2", file_name="file2")
         turnitin_submission_3 = Mock(turnitin_submission_id="id3", file_name="file3")
@@ -358,6 +455,13 @@ class TestTurnitinClient(TestCase):
 
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.get_submissions")
     def test_create_similarity_viewer_error_response(self, mock_get_submissions: Mock):
+        """
+        Test the `create_similarity_viewer` method with error response.
+
+        Expected result:
+            - `get_submissions` function is called with the correct parameters
+            - `create_similarity_viewer` method returns an error response.
+        """
         error_response = Response(status=status.HTTP_400_BAD_REQUEST)
         mock_get_submissions.return_value = error_response
 
@@ -367,6 +471,12 @@ class TestTurnitinClient(TestCase):
 
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinSubmission.objects")
     def test_get_submissions_success(self, mock_objects: Mock):
+        """
+        Test the `get_submissions` method.
+
+        Expected result:
+            - `get_submissions` method returns the correct response.
+        """
         mock_submission = Mock()
         mock_objects.filter.return_value = [mock_submission]
 
@@ -379,6 +489,12 @@ class TestTurnitinClient(TestCase):
 
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinSubmission.objects")
     def test_get_submissions_not_found(self, mock_objects: Mock):
+        """
+        Test the `get_submissions` method when no submission is found.
+
+        Expected result:
+            - `get_submissions` method returns an error response.
+        """
         mock_objects.filter.return_value = []
 
         result = self.turnitin_client.get_submissions(self.ora_submission_id)
