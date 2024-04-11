@@ -6,13 +6,15 @@
 #
 amqp==5.2.0
     # via kombu
-asgiref==3.7.2
+asgiref==3.8.1
     # via django
 attrs==23.2.0
     # via openedx-events
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   celery
+    #   django
+    #   djangorestframework
     #   kombu
 billiard==4.2.0
     # via celery
@@ -33,15 +35,15 @@ click==8.1.7
     #   click-plugins
     #   click-repl
     #   edx-django-utils
-click-didyoumean==0.3.0
+click-didyoumean==0.3.1
     # via celery
 click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-cryptography==42.0.2
+cryptography==42.0.5
     # via pyjwt
-django==3.2.24
+django==4.2.11
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/base.in
@@ -58,13 +60,13 @@ django==3.2.24
     #   openedx-filters
 django-crum==0.7.9
     # via edx-django-utils
-django-model-utils==4.3.1
+django-model-utils==4.5.0
     # via edx-submissions
 django-waffle==4.1.0
     # via
     #   edx-django-utils
     #   edx-drf-extensions
-djangorestframework==3.14.0
+djangorestframework==3.15.1
     # via
     #   -r requirements/base.in
     #   drf-jwt
@@ -72,29 +74,31 @@ djangorestframework==3.14.0
     #   edx-submissions
 drf-jwt==1.19.2
     # via edx-drf-extensions
-edx-django-utils==5.10.1
-    # via edx-drf-extensions
-edx-drf-extensions==10.2.0
+edx-django-utils==5.12.0
+    # via
+    #   edx-drf-extensions
+    #   openedx-events
+edx-drf-extensions==10.3.0
     # via -r requirements/base.in
 edx-opaque-keys[django]==2.5.1
     # via
     #   edx-drf-extensions
     #   openedx-events
-edx-submissions==3.6.0
+edx-submissions==3.7.0
     # via -r requirements/base.in
-fastavro==1.9.3
+fastavro==1.9.4
     # via openedx-events
-idna==3.6
+idna==3.7
     # via requests
 jsonfield==3.1.0
     # via edx-submissions
-kombu==5.3.5
+kombu==5.3.7
     # via celery
-newrelic==9.6.0
+newrelic==9.8.0
     # via edx-django-utils
-openedx-events @ git+https://github.com/edunext/openedx-events.git@9.4.0/edues
+openedx-events==9.9.0
     # via -r requirements/base.in
-openedx-filters @ git+https://github.com/edunext/openedx-filters.git@1.6.0/edues
+openedx-filters==1.8.0
     # via -r requirements/base.in
 pbr==6.0.0
     # via stevedore
@@ -102,24 +106,20 @@ prompt-toolkit==3.0.43
     # via click-repl
 psutil==5.9.8
     # via edx-django-utils
-pycparser==2.21
+pycparser==2.22
     # via cffi
 pyjwt[crypto]==2.8.0
     # via
     #   drf-jwt
     #   edx-drf-extensions
-    #   pyjwt
 pymongo==3.13.0
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via celery
 pytz==2024.1
-    # via
-    #   django
-    #   djangorestframework
-    #   edx-submissions
+    # via edx-submissions
 requests==2.31.0
     # via
     #   -r requirements/base.in
@@ -130,20 +130,20 @@ six==1.16.0
     # via python-dateutil
 sqlparse==0.4.4
     # via django
-stevedore==5.1.0
+stevedore==5.2.0
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-typing-extensions==4.9.0
+typing-extensions==4.11.0
     # via
     #   asgiref
     #   edx-opaque-keys
     #   kombu
-tzdata==2023.4
+tzdata==2024.1
     # via
     #   backports-zoneinfo
     #   celery
-urllib3==2.2.0
+urllib3==2.2.1
     # via requests
 vine==5.1.0
     # via
