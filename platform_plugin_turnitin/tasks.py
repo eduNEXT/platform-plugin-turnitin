@@ -28,7 +28,7 @@ log = getLogger(__name__)
 def ora_submission_created_task(
     submission_uuid: str,
     anonymous_user_id: str,
-    parts: dict,
+    parts: List[dict],
     file_names: List[str],
     file_urls: List[str],
 ) -> None:
@@ -54,14 +54,14 @@ def ora_submission_created_task(
         sleep(SECONDS_TO_WAIT_BETWEEN_RETRIES)
 
 
-def send_text_to_turnitin(ora_submission_uuid: str, user, parts: dict) -> None:
+def send_text_to_turnitin(ora_submission_uuid: str, user, parts: List[dict]) -> None:
     """
     Task to send text to Turnitin.
 
     Args:
         ora_submission_uuid (str): The ORA submission UUID.
         user (User): The user who made the submission.
-        answer (dict): The answer of the submission.
+        parts (List[dict]): The answer of the submission.
     """
     for part in parts:
         text_content = part.get("text").encode("utf-8")

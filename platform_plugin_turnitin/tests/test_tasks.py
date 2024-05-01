@@ -27,13 +27,14 @@ class TestOraSubmissionCreatedTask(TestCase):
     """Tests for the ora_submission_created_task function."""
 
     def setUp(self) -> None:
-        self.submission_id = "test-submission-id"
-        self.file_downloads = [{"file": "file1"}, {"file": "file2"}]
+        self.submission_uuid = "test-submission-uuid"
+        self.anonymous_user_id = "test-anonymous-user-id"
+        self.parts = [{"text": "part1"}, {"text": "part2"}]
+        self.file_names = ["file1.txt", "file2.doc"]
+        self.file_urls = ["/download/file1.txt", "/download/file2.doc"]
         self.user = Mock()
-        self.user.id = "1"
         self.file = Mock()
 
-    @patch(f"{TASKS_MODULE_PATH}.submissions_api.get_submission_and_student")
     @patch(f"{TASKS_MODULE_PATH}.user_by_anonymous_id")
     @patch(f"{TASKS_MODULE_PATH}.send_text_to_turnitin")
     @patch(f"{TASKS_MODULE_PATH}.send_uploaded_files_to_turnitin")
@@ -46,43 +47,34 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_send_uploaded_files_to_turnitin: Mock,
         mock_send_text_to_turnitin: Mock,
         mock_user_by_anonymous_id: Mock,
-        mock_get_submission_and_student: Mock,
     ):
         """
         Test the `ora_submission_created_task` function.
 
         Expected result:
-            - `get_submission_and_student` is called once with the submission_id.
-            - `user_by_anonymous_id` is called once with the user id.
-            - `send_text_to_turnitin` is called once with the submission_id, user and answer.
-            - `send_uploaded_files_to_turnitin` is called once with the submission_id,
-                user and file_downloads.
+            - `user_by_anonymous_id` is called once with the anonymous_user_id.
+            - `send_text_to_turnitin` is called once with the submission_id, user and parts.
+            - `send_uploaded_files_to_turnitin` is called once with the submission_uuid,
+                user, file_names and file_urls.
         """
-        mock_get_submission_and_student.return_value = {
-            "student_item": {"student_id": self.user.id},
-            "answer": "answer",
-        }
         mock_user_by_anonymous_id.return_value = self.user
         mock_is_submission_complete.return_value = True
 
-        ora_submission_created_task(self.submission_id, self.file_downloads)
-
-        mock_get_submission_and_student.assert_called_once_with(self.submission_id)
-        mock_user_by_anonymous_id.assert_called_once_with(self.user.id)
-        mock_send_text_to_turnitin.assert_called_once_with(
-            self.submission_id, self.user, "answer"
+        ora_submission_created_task(
+            self.submission_uuid, self.anonymous_user_id, self.parts, self.file_names, self.file_urls
         )
+
+        mock_user_by_anonymous_id.assert_called_once_with(self.anonymous_user_id)
+        mock_send_text_to_turnitin.assert_called_once_with(self.submission_uuid, self.user, self.parts)
         mock_send_uploaded_files_to_turnitin.assert_called_once_with(
-            self.submission_id,
+            self.submission_uuid,
             self.user,
-            self.file_downloads,
+            self.file_names,
+            self.file_urls,
         )
         mock_is_submission_complete.assert_called()
-        mock_generate_similarity_report.assert_called_once_with(
-            self.submission_id, self.user
-        )
+        mock_generate_similarity_report.assert_called_once_with(self.submission_uuid, self.user)
 
-    @patch(f"{TASKS_MODULE_PATH}.submissions_api.get_submission_and_student")
     @patch(f"{TASKS_MODULE_PATH}.user_by_anonymous_id")
     @patch(f"{TASKS_MODULE_PATH}.send_text_to_turnitin")
     @patch(f"{TASKS_MODULE_PATH}.send_uploaded_files_to_turnitin")
@@ -97,43 +89,32 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_send_uploaded_files_to_turnitin: Mock,
         mock_send_text_to_turnitin: Mock,
         mock_user_by_anonymous_id: Mock,
-        mock_get_submission_and_student: Mock,
     ):
         """
         Test the `ora_submission_created_task` function with retries.
 
         Expected result:
-            - `get_submission_and_student` is called once with the submission_id.
-            - `user_by_anonymous_id` is called once with the user id.
-            - `send_text_to_turnitin` is called once with the submission_id, user and answer.
-            - `send_uploaded_files_to_turnitin` is called once with the submission_id,
-                user and file_downloads.
+            - `user_by_anonymous_id` is called once with the anonymous_user_id.
+            - `send_text_to_turnitin` is called once with the submission_uuid, user and parts.
+            - `send_uploaded_files_to_turnitin` is called once with the submission_uuid,
+                user, file_names and file_urls.
             - `is_submission_complete` is called MAX_REQUEST_RETRIES times.
             - `generate_similarity_report` is called once.
         """
-        mock_get_submission_and_student.return_value = {
-            "student_item": {"student_id": self.user.id},
-            "answer": "answer",
-        }
         mock_user_by_anonymous_id.return_value = self.user
-        mock_is_submission_complete.side_effect = [False] * (
-            MAX_REQUEST_RETRIES - 1
-        ) + [True]
+        mock_is_submission_complete.side_effect = [False] * (MAX_REQUEST_RETRIES - 1) + [True]
 
-        ora_submission_created_task(self.submission_id, self.file_downloads)
-
-        mock_get_submission_and_student.assert_called_once_with(self.submission_id)
-        mock_user_by_anonymous_id.assert_called_once_with(self.user.id)
-        mock_send_text_to_turnitin.assert_called_once_with(
-            self.submission_id, self.user, "answer"
+        ora_submission_created_task(
+            self.submission_uuid, self.anonymous_user_id, self.parts, self.file_names, self.file_urls
         )
+
+        mock_user_by_anonymous_id.assert_called_once_with(self.anonymous_user_id)
+        mock_send_text_to_turnitin.assert_called_once_with(self.submission_uuid, self.user, self.parts)
         mock_send_uploaded_files_to_turnitin.assert_called_once_with(
-            self.submission_id, self.user, self.file_downloads
+            self.submission_uuid, self.user, self.file_names, self.file_urls
         )
         self.assertEqual(mock_is_submission_complete.call_count, MAX_REQUEST_RETRIES)
-        mock_generate_similarity_report.assert_called_once_with(
-            self.submission_id, self.user
-        )
+        mock_generate_similarity_report.assert_called_once_with(self.submission_uuid, self.user)
         self.assertEqual(mock_sleep.call_count, MAX_REQUEST_RETRIES - 1)
 
     @patch(f"{TASKS_MODULE_PATH}.send_file_to_turnitin")
@@ -145,14 +126,13 @@ class TestOraSubmissionCreatedTask(TestCase):
             - `send_file_to_turnitin` is called twice with the submission_id,
                 user and text parts.
         """
-        answer = {"parts": [{"text": "part1"}, {"text": "part2"}]}
         response_txt = "Students' Text Response.txt"
 
-        send_text_to_turnitin(self.submission_id, self.user, answer)
+        send_text_to_turnitin(self.submission_uuid, self.user, self.parts)
 
         calls = [
-            call(self.submission_id, self.user, "part1".encode("utf-8"), response_txt),
-            call(self.submission_id, self.user, "part2".encode("utf-8"), response_txt),
+            call(self.submission_uuid, self.user, "part1".encode("utf-8"), response_txt),
+            call(self.submission_uuid, self.user, "part2".encode("utf-8"), response_txt),
         ]
         mock_send_file_to_turnitin.assert_has_calls(calls)
 
@@ -164,36 +144,29 @@ class TestOraSubmissionCreatedTask(TestCase):
         Expected result:
             - `send_file_to_turnitin` function is not called.
         """
-        answer = {"parts": []}
-
-        send_text_to_turnitin(self.submission_id, self.user, answer)
+        send_text_to_turnitin(self.submission_uuid, self.user, [])
 
         self.assertFalse(mock_send_file_to_turnitin.called)
 
     @patch(f"{TASKS_MODULE_PATH}.requests.get")
     @patch(f"{TASKS_MODULE_PATH}.send_file_to_turnitin")
-    def test_send_uploaded_files_to_turnitin(
-        self, mock_send_file_to_turnitin: Mock, mock_get: Mock
-    ):
+    def test_send_uploaded_files_to_turnitin(self, mock_send_file_to_turnitin: Mock, mock_get: Mock):
         """
         Test the `send_uploaded_files_to_turnitin` function.
 
         Expected result:
-            - `send_file_to_turnitin` is called twice with the submission_id,
-                user and file content.
+            - `send_file_to_turnitin` is called twice with the submission_uuid,
+                user, file_names and file_urls.
         """
-        file_downloads = [
-            {"name": "file1.txt", "download_url": "/download/file1.txt"},
-            {"name": "file2.doc", "download_url": "/download/file2.doc"},
-            {"name": "file3.jpg", "download_url": "/download/file3.jpg"},
-        ]
+        file_names = ["file1.txt", "file2.doc"]
+        file_urls = ["/download/file1.txt", "/download/file2.doc"]
         mock_get.return_value = Mock(ok=True, content=b"file content")
 
-        send_uploaded_files_to_turnitin(self.submission_id, self.user, file_downloads)
+        send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls)
 
         calls = [
-            call(self.submission_id, self.user, b"file content", "file1.txt"),
-            call(self.submission_id, self.user, b"file content", "file2.doc"),
+            call(self.submission_uuid, self.user, b"file content", "file1.txt"),
+            call(self.submission_uuid, self.user, b"file content", "file2.doc"),
         ]
         mock_send_file_to_turnitin.assert_has_calls(calls)
         self.assertEqual(mock_send_file_to_turnitin.call_count, 2)
@@ -211,23 +184,20 @@ class TestOraSubmissionCreatedTask(TestCase):
             - `send_file_to_turnitin` function is not called.
         """
         file_link = "/download/file1.txt"
-        file_downloads = [{"name": "file1.txt", "download_url": file_link}]
+        file_names = ["file1.txt"]
+        file_urls = [file_link]
         exception_message = f"Failed to download file from {file_link}"
         mock_get.return_value = Mock(ok=False)
 
         with self.assertRaises(Exception) as context:
-            send_uploaded_files_to_turnitin(
-                self.submission_id, self.user, file_downloads
-            )
+            send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls)
 
         mock_send_file_to_turnitin.assert_not_called()
         self.assertEqual(exception_message, str(context.exception))
 
     @patch(f"{TASKS_MODULE_PATH}.tempfile.NamedTemporaryFile")
     @patch(f"{TASKS_MODULE_PATH}.upload_turnitin_submission")
-    def test_send_file_to_turnitin(
-        self, mock_upload_turnitin_submission: Mock, mock_temp_file: Mock
-    ):
+    def test_send_file_to_turnitin(self, mock_upload_turnitin_submission: Mock, mock_temp_file: Mock):
         """
         Test the `send_file_to_turnitin` function.
 
@@ -241,14 +211,12 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_file = mock_temp_file.return_value.__enter__.return_value
         mock_file.name = filename
 
-        send_file_to_turnitin(self.submission_id, self.user, file_content, filename)
+        send_file_to_turnitin(self.submission_uuid, self.user, file_content, filename)
 
         mock_temp_file.assert_called_once()
         mock_file.write.assert_called_once_with(file_content)
         mock_file.seek.assert_called_once_with(0)
-        mock_upload_turnitin_submission.assert_called_once_with(
-            self.submission_id, self.user, mock_file
-        )
+        mock_upload_turnitin_submission.assert_called_once_with(self.submission_uuid, self.user, mock_file)
 
     @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
     def test_upload_turnitin_submission(self, mock_turnitin_client: Mock):
@@ -263,13 +231,11 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_turnitin_client_instance = mock_turnitin_client.return_value
         mock_turnitin_client_instance.accept_eula_agreement.return_value.ok = True
 
-        upload_turnitin_submission(self.submission_id, self.user, self.file)
+        upload_turnitin_submission(self.submission_uuid, self.user, self.file)
 
         mock_turnitin_client.assert_called_once_with(self.user, self.file)
         mock_turnitin_client_instance.accept_eula_agreement.assert_called_once()
-        mock_turnitin_client_instance.upload_turnitin_submission_file.assert_called_once_with(
-            self.submission_id
-        )
+        mock_turnitin_client_instance.upload_turnitin_submission_file.assert_called_once_with(self.submission_uuid)
 
     @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
     def test_upload_turnitin_submission_eula_failure(self, mock_turnitin_client: Mock):
@@ -286,7 +252,7 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_turnitin_client_instance.accept_eula_agreement.return_value.ok = False
 
         with self.assertRaises(Exception) as context:
-            upload_turnitin_submission(self.submission_id, self.user, self.file)
+            upload_turnitin_submission(self.submission_uuid, self.user, self.file)
 
         self.assertEqual("Failed to accept the EULA agreement.", str(context.exception))
         mock_turnitin_client.assert_called_once_with(self.user, self.file)
@@ -306,16 +272,12 @@ class TestOraSubmissionCreatedTask(TestCase):
             - `get_submission_status` is called once with the submission_id and user.
             - `log.info` is not called.
         """
-        mock_get_submission_status.return_value = Mock(
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
+        mock_get_submission_status.return_value = Mock(status_code=status.HTTP_400_BAD_REQUEST)
 
-        result = is_submission_complete(self.submission_id, self.user)
+        result = is_submission_complete(self.submission_uuid, self.user)
 
         self.assertFalse(result)
-        mock_get_submission_status.assert_called_once_with(
-            self.submission_id, self.user
-        )
+        mock_get_submission_status.assert_called_once_with(self.submission_uuid, self.user)
         mock_log_info.assert_not_called()
 
     @patch(f"{TASKS_MODULE_PATH}.get_submission_status")
@@ -336,15 +298,11 @@ class TestOraSubmissionCreatedTask(TestCase):
             data=[{"status": "COMPLETE"}, {"status": "COMPLETE"}],
         )
 
-        result = is_submission_complete(self.submission_id, self.user)
+        result = is_submission_complete(self.submission_uuid, self.user)
 
         self.assertTrue(result)
-        mock_get_submission_status.assert_called_once_with(
-            self.submission_id, self.user
-        )
-        mock_log_info.assert_called_once_with(
-            f"Submission [{self.submission_id}] is complete."
-        )
+        mock_get_submission_status.assert_called_once_with(self.submission_uuid, self.user)
+        mock_log_info.assert_called_once_with(f"Submission [{self.submission_uuid}] is complete.")
 
     @patch(f"{TASKS_MODULE_PATH}.get_submission_status")
     @patch(f"{TASKS_MODULE_PATH}.log.info")
@@ -364,15 +322,11 @@ class TestOraSubmissionCreatedTask(TestCase):
             data=[{"status": "ERROR"}, {"status": "ERROR"}],
         )
 
-        result = is_submission_complete(self.submission_id, self.user)
+        result = is_submission_complete(self.submission_uuid, self.user)
 
         self.assertTrue(result)
-        mock_get_submission_status.assert_called_once_with(
-            self.submission_id, self.user
-        )
-        mock_log_info.assert_called_once_with(
-            f"Submission [{self.submission_id}] is complete."
-        )
+        mock_get_submission_status.assert_called_once_with(self.submission_uuid, self.user)
+        mock_log_info.assert_called_once_with(f"Submission [{self.submission_uuid}] is complete.")
 
     @patch(f"{TASKS_MODULE_PATH}.get_submission_status")
     @patch(f"{TASKS_MODULE_PATH}.log.info")
@@ -392,15 +346,11 @@ class TestOraSubmissionCreatedTask(TestCase):
             data=[{"status": "COMPLETE"}, {"status": "PROCESSING"}],
         )
 
-        result = is_submission_complete(self.submission_id, self.user)
+        result = is_submission_complete(self.submission_uuid, self.user)
 
         self.assertFalse(result)
-        mock_get_submission_status.assert_called_once_with(
-            self.submission_id, self.user
-        )
-        mock_log_info.assert_called_once_with(
-            f"Submission [{self.submission_id}] is not complete. Checking again..."
-        )
+        mock_get_submission_status.assert_called_once_with(self.submission_uuid, self.user)
+        mock_log_info.assert_called_once_with(f"Submission [{self.submission_uuid}] is not complete. Checking again...")
 
     @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
     def test_get_submission_status(self, mock_turnitin_client: Mock):
@@ -412,17 +362,13 @@ class TestOraSubmissionCreatedTask(TestCase):
             - `get_submission_status` is called once with the submission_id.
         """
         mock_turnitin_client_instance = mock_turnitin_client.return_value
-        mock_turnitin_client_instance.get_submission_status.return_value = Mock(
-            status_code=status.HTTP_200_OK
-        )
+        mock_turnitin_client_instance.get_submission_status.return_value = Mock(status_code=status.HTTP_200_OK)
 
-        result = get_submission_status(self.submission_id, self.user)
+        result = get_submission_status(self.submission_uuid, self.user)
 
         self.assertEqual(result.status_code, status.HTTP_200_OK)
         mock_turnitin_client.assert_called_once_with(self.user)
-        mock_turnitin_client_instance.get_submission_status.assert_called_once_with(
-            self.submission_id
-        )
+        mock_turnitin_client_instance.get_submission_status.assert_called_once_with(self.submission_uuid)
 
     @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
     def test_get_submission_status_with_error(self, mock_turnitin_client: Mock):
@@ -435,17 +381,13 @@ class TestOraSubmissionCreatedTask(TestCase):
             - `get_submission_status` is called once with the submission_id.
         """
         mock_turnitin_client_instance = mock_turnitin_client.return_value
-        mock_turnitin_client_instance.get_submission_status.return_value = Mock(
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
+        mock_turnitin_client_instance.get_submission_status.return_value = Mock(status_code=status.HTTP_400_BAD_REQUEST)
 
-        result = get_submission_status(self.submission_id, self.user)
+        result = get_submission_status(self.submission_uuid, self.user)
 
         self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
         mock_turnitin_client.assert_called_once_with(self.user)
-        mock_turnitin_client_instance.get_submission_status.assert_called_once_with(
-            self.submission_id
-        )
+        mock_turnitin_client_instance.get_submission_status.assert_called_once_with(self.submission_uuid)
 
     @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
     def test_generate_similarity_report(self, mock_turnitin_client: Mock):
@@ -458,9 +400,7 @@ class TestOraSubmissionCreatedTask(TestCase):
         """
         mock_turnitin_client_instance = mock_turnitin_client.return_value
 
-        generate_similarity_report(self.submission_id, self.user)
+        generate_similarity_report(self.submission_uuid, self.user)
 
         mock_turnitin_client.assert_called_once_with(self.user)
-        mock_turnitin_client_instance.generate_similarity_report.assert_called_once_with(
-            self.submission_id
-        )
+        mock_turnitin_client_instance.generate_similarity_report.assert_called_once_with(self.submission_uuid)
