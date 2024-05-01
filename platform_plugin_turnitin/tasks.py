@@ -38,7 +38,7 @@ def ora_submission_created_task(
     Args:
         submission_uuid (str): The ORA submission UUID.
         anonymous_user_id (str): The anonymous user ID.
-        parts (dict): The parts of the submission with the answers.
+        parts (List[dict]): The parts of the submission with the answers.
         file_names (List[str]): The list of file names.
         file_urls (List[str]): The list of file URLs.
     """
