@@ -63,9 +63,9 @@ def send_text_to_turnitin(ora_submission_uuid: str, user, parts: List[dict]) -> 
         user (User): The user who made the submission.
         parts (List[dict]): The answer of the submission.
     """
-    for part in parts:
+    for idx, part in enumerate(parts, 1):
         text_content = part.get("text").encode("utf-8")
-        send_file_to_turnitin(ora_submission_uuid, user, text_content, "Students' Text Response.txt")
+        send_file_to_turnitin(ora_submission_uuid, user, text_content, f"Student's Text Response Part {idx}.txt")
 
 
 def send_uploaded_files_to_turnitin(
