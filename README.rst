@@ -20,20 +20,6 @@ Government - 2024.
 .. _Open Response Assessment (ORA): https://github.com/openedx/edx-ora2
 
 
-Dependencies
-************
-
-This plugin depends the next libraries. Currently, the versions that are
-compatible with this plugin are the next:
-
-- Open edX Events with `these commits <https://github.com/openedx/openedx-events/compare/main...eduNEXT:openedx-events:9.4.0/edues>`__
-- Open edX Filters with `these commits <https://github.com/openedx/openedx-filters/compare/main...eduNEXT:openedx-filters:1.6.0/edues>`__
-- ORA2 XBlock with `these commits <https://github.com/openedx/edx-ora2/compare/master...eduNEXT:edx-ora2:6.0.31/edues>`__
-
-The dependecies with these commits are temporary. We are working
-to include these changes in master.
-
-
 Getting Started
 ***************
 
