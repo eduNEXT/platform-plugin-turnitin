@@ -126,13 +126,13 @@ class TestOraSubmissionCreatedTask(TestCase):
             - `send_file_to_turnitin` is called twice with the submission_id,
                 user and text parts.
         """
-        response_txt = "Students' Text Response.txt"
+        response_txt = "Student's Text Response Part {}.txt"
 
         send_text_to_turnitin(self.submission_uuid, self.user, self.parts)
 
         calls = [
-            call(self.submission_uuid, self.user, "part1".encode("utf-8"), response_txt),
-            call(self.submission_uuid, self.user, "part2".encode("utf-8"), response_txt),
+            call(self.submission_uuid, self.user, "part1".encode("utf-8"), response_txt.format(1)),
+            call(self.submission_uuid, self.user, "part2".encode("utf-8"), response_txt.format(2)),
         ]
         mock_send_file_to_turnitin.assert_has_calls(calls)
 
