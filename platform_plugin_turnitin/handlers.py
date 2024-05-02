@@ -11,6 +11,9 @@ def ora_submission_created(submission, **kwargs):
         submission (ORASubmissionData): The ORA submission data.
     """
     ora_submission_created_task.delay(
-        submission.id,
-        submission.file_downloads,
+        submission.uuid,
+        submission.anonymous_user_id,
+        submission.answer.parts,
+        submission.answer.file_names,
+        submission.answer.file_urls,
     )
