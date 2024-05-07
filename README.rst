@@ -10,14 +10,20 @@ Purpose
 Open edX plugin that includes an API to integrate with Turnitin. This plugin
 allows to learners to upload files to Turnitin and instructors to get
 information about the submissions, generate similarity reports, and get the
-viewer URL of the submissions. This plugin is designed to be used with the `Open
-Response Assessment (ORA)`_ XBlock of the Open edX platform.
+viewer URL of the submissions. This plugin is designed to be used with the
+`Open Response Assessment (ORA)`_ XBlock of the Open edX platform.
 
 This plugin has been created as an open source contribution to the Open edX
 platform and has been funded by the Unidigital project from the Spanish
 Government - 2024.
 
 .. _Open Response Assessment (ORA): https://github.com/openedx/edx-ora2
+
+**NOTE**: This plugin only includes the API to interact with Turnitin. All
+frontend changes that are related to displaying the similarity reports to
+instructors are included in the `ORA Grading MFE`_.
+
+.. _ORA Grading MFE: https://github.com/eduNEXT/frontend-app-ora-grading/pull/4
 
 
 Getting Started
