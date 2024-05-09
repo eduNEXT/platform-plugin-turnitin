@@ -1,0 +1,305 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-09 13:53-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: templates/turnitin/oa_response.html:27
+msgid "Your Team's Response"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:29
+msgid "Your Response"
+msgstr ""
+
+#. Translators: This string displays a date to the user, then tells them the time until that date.  Example: "available August 13th, 2014 (in 5 days and 45 minutes)"
+#: templates/turnitin/oa_response.html:39
+#, python-format, python-brace-format
+msgid ""
+"\n"
+"            <span id=\"oa_step_deadline_response\" class=\"date ora-"
+"datetime\" data-datetime=\"%(start_date)s\" data-string=\"available {date} "
+"(in %(time_until)s)\" data-timezone=\"%(user_timezone)s\" data-"
+"language=\"%(user_language)s\"></span>\n"
+"            "
+msgstr ""
+
+#. Translators: This string displays a date to the user, then tells them the time until that date.  Example: "due August 13th, 2014 (in 5 days and 45 minutes)"
+#: templates/turnitin/oa_response.html:46
+#, python-format, python-brace-format
+msgid ""
+"\n"
+"            <span id=\"oa_step_deadline_response\" class=\"date ora-"
+"datetime\" data-datetime=\"%(due_date)s\" data-string=\"due {date} (in "
+"%(time_until)s)\" data-timezone=\"%(user_timezone)s\" data-"
+"language=\"%(user_language)s\"></span>\n"
+"            "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:54
+msgid "In Progress"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:66
+msgid "Enter your team's response to the prompt."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:68
+msgid ""
+"\n"
+"                        Your work will save automatically and you can return "
+"to complete your team's response at any time before the due date\n"
+"                      "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:81
+msgid ""
+"\n"
+"                        Your work will save automatically and you can return "
+"to complete your team's response at any time.\n"
+"                      "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:86
+msgid ""
+"After you submit a response on behalf of your team, it cannot be edited."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:89
+msgid "Enter your response to the prompt."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:92
+msgid ""
+"Your work will save automatically and you can return to complete your "
+"response at any time before the subsection due date "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:94
+msgid ""
+"Your work will save automatically and you can return to complete your "
+"response at any time before the course ends "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:96
+msgid ""
+"Your work will save automatically and you can return to complete your "
+"response at any time before the due date "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:108
+msgid ""
+"Your work will save automatically and you can return to complete your "
+"response at any time."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:110
+msgid "After you submit your response, you cannot edit it"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:120
+msgid "What will this assignment be graded on?"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:134
+msgid "The prompt for this section"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:148
+msgid "You are on team "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:150
+msgid "Team Members: "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:155
+#, python-format
+msgid ""
+"\n"
+"                                              %(team_members_with_external_submissions)s\n"
+"                                              have/has already submitted a "
+"response to this assignment with another team,\n"
+"                                              and will not be a part of your "
+"team's submission or assignment grade.\n"
+"                                          "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:171
+msgid "Team Response "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:173
+msgid "Your Response "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:177
+#: templates/turnitin/oa_response.html:247
+msgid "(Required)"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:179
+#: templates/turnitin/oa_response.html:249
+msgid "(Optional)"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:183
+msgid ""
+"\n"
+"                                              Teams should designate one "
+"team member to submit a response on behalf of the\n"
+"                                              entire team.  All team members "
+"can use this space to work on draft responses,\n"
+"                                              but you will not be able to "
+"see your teammates' drafts made in this space, so\n"
+"                                              please coordinate with them to "
+"decide on the final response the designated team\n"
+"                                              member should submit.\n"
+"                                          "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:197
+msgid "Enter your response to the prompt above."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:211
+#, python-format
+msgid ""
+"\n"
+"                                      You are currently on Team "
+"%(team_name)s. Since you were on Team %(previous_team_name)s\n"
+"                                      when they submitted a response to this "
+"assignment, you are seeing Team %(previous_team_name)s’s\n"
+"                                      response and will receive the same "
+"grade for this assignment as your former teammates.\n"
+"                                      You will not be part of Team "
+"%(team_name)s’s submission for this assignment and will not\n"
+"                                      receive a grade for their submission.\n"
+"                                  "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:224
+msgid "We could not save your progress"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:232
+msgid "Status of Your Response"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:245
+msgid "File Uploads "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:253
+msgid ""
+"\n"
+"                                  Upload files and review files uploaded by "
+"you and your teammates below. Be sure to add\n"
+"                                  descriptions to your files to help your "
+"teammates identify them.\n"
+"                              "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:261
+msgid "We could not upload files"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:267
+msgid "We could not delete files"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:274
+msgid "Select one or more files to upload for this submission."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:276
+msgid "Select a file to upload for this submission."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:280
+msgid "Supported file types: "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:285
+msgid "Upload files"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:287
+msgid "Upload file"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:304
+msgid "This is a team submission."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:306
+msgid ""
+"One team member should submit a response with the team’s shared files and a "
+"text response on behalf of the entire team."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:308
+msgid ""
+"One team member should submit a response with the team’s shared files on "
+"behalf of the entire team."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:310
+msgid ""
+"One team member should submit a text response on behalf of the entire team."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:312
+msgid "One team member should submit on behalf of the entire team."
+msgstr ""
+
+#: templates/turnitin/oa_response.html:314
+msgid ""
+"\n"
+"                  Learn more about team assignments here: (<a "
+"target=\"_blank\" href=\"https://support.edx.org/hc/en-us/"
+"articles/360000191067-Submit-your-"
+"response#h_01FVD8SXM9E5H2DNAG87X25ZHR\">link</a>)\n"
+"                  "
+msgstr ""
+
+#: templates/turnitin/oa_response.html:322
+msgid "We could not submit your response"
+msgstr ""
+
+#: templates/turnitin/oa_response.html:328
+msgid ""
+"\n"
+"                          The response text and files related to your "
+"response will be sent to Turnitin for a plagiarism check.\n"
+"                          Please read <a href=\"https://www.turnitin.com/"
+"agreement.asp\" target=\"_blank\">Turnitin's EULA</a>\n"
+"                          before submitting, as by doing so, you are "
+"explicitly accepting the agreement.\n"
+"                        "
+msgstr ""
+"\n"
+"                          La respuesta de texto y los archivos relacionados "
+"con su respuesta se enviarán a Turnitin para una verificación de plagio.\n"
+"                          Por favor, lea el <a href=\"https://www.turnitin.com/"
+"agreement.asp\" target=\"_blank\">EULA de Turnitin</a>\n"
+"                          antes de enviar, ya que al hacerlo, está aceptando "
+"explícitamente el acuerdo.\n"
+"                        "
+
+#: templates/turnitin/oa_response.html:343
+msgid "Submit your response and move to the next step"
+msgstr ""

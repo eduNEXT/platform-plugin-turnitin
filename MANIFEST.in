@@ -4,3 +4,5 @@ include README.rst
 include requirements/base.in
 include requirements/constraints.txt
 recursive-include platform_plugin_turnitin *.html *.png *.gif *.js *.css *.jpg *.jpeg *.svg
+recursive-include platform_plugin_turnitin/locale *.po
+recursive-include platform_plugin_turnitin/locale *.mo

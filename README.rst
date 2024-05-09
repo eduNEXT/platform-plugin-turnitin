@@ -287,6 +287,22 @@ your idea.
 
 .. _How To Contribute: https://openedx.org/r/how-to-contribute
 
+Translations
+============
+
+This plugin is initially available in English and Spanish. You can help by
+translating this component to other languages. Follow the steps below:
+
+1. Run the following command to extract the strings from the code and create
+   the ``.po`` file specifying the locale, eg: ``fr_FR``:
+
+   .. code-block:: bash
+
+      cd platform_plugin_turnitin && django-admin makemessages -l fr_FR -v1 -d django
+2. Update the ``.po`` file with the translations.
+3. Run ``make compile_translations``, this will generate the ``.mo`` file.
+4. Create a pull request with your changes.
+
 
 Reporting Security Issues
 *************************
