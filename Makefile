@@ -84,11 +84,11 @@ selfcheck: ## check that the Makefile is well-formed
 ## Localization targets
 
 extract_translations: ## extract strings to be translated, outputting .mo files
-	cd platform_plugin_turnitin && ../manage.py makemessages -l en -v1 -d django
-	cd platform_plugin_turnitin && ../manage.py makemessages -l en -v1 -d djangojs
+	cd platform_plugin_turnitin && django-admin makemessages -l en -v1 -d django
+	cd platform_plugin_turnitin && django-admin makemessages -l en -v1 -d djangojs
 
 compile_translations: ## compile translation files, outputting .po files for each supported language
-	cd platform_plugin_turnitin && ../manage.py compilemessages
+	cd platform_plugin_turnitin && django-admin compilemessages
 
 detect_changed_source_translations:
 	cd platform_plugin_turnitin && i18n_tool changed
