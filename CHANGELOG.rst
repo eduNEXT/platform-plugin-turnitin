@@ -16,6 +16,15 @@ Unreleased
 
 *
 
+0.3.0 - 2024-05-09
+**********************************************
+
+Added
+=====
+
+* Added setting to enable turnitin integration.
+* Added translation for es_419 and es_ES.
+
 0.2.4 - 2024-05-02
 **********************************************
 
