@@ -1,6 +1,6 @@
 """Utility functions for the Turnitin platform plugin."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from opaque_keys.edx.keys import UsageKey
 
@@ -18,7 +18,7 @@ def get_current_datetime() -> str:
     Returns:
         str: The current datetime in ISO 8601 format.
     """
-    return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def enabled_in_course(block_id: str) -> bool:
