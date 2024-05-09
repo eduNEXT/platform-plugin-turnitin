@@ -214,7 +214,25 @@ Instructors endpoints
 Configuring required in the Open edX platform
 *********************************************
 
-You need to configure the following settings to use the plugin:
+By default the turnitin functionality is disabled. If you want to enable the
+functionality globally (in all courses) add the following setting in your LMS:
+
+.. code-block:: python
+
+  ENABLE_TURNITIN_SUBMISSION = True
+
+Optionally, you can enable the functionality in a specific course by adding the
+following setting from **Studio** > **Advanced Settings** > **Other Course
+Settings**:
+
+.. code-block:: json
+
+  {
+    "ENABLE_TURNITIN_SUBMISSION": true
+  }
+
+Finally, to use the turnitin API it is necessary to configure the following
+settings in your LMS:
 
 .. code-block:: python
 
