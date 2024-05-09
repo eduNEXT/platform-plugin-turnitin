@@ -37,7 +37,7 @@ def plugin_settings(settings):
     Set of plugin settings used by the Open Edx platform.
     More info: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
-
+    settings.ENABLE_TURNITIN_SUBMISSION = False
     # Configuration variables
     settings.TURNITIN_TII_API_URL = None
     settings.TURNITIN_TCA_INTEGRATION_FAMILY = None
@@ -73,14 +73,17 @@ def plugin_settings(settings):
             "exclude_submitted_works": False,
         },
     }
+    # Backend settings
     settings.TURNITIN_API_TIMEOUT = 30
     settings.PLATFORM_PLUGIN_TURNITIN_AUTHENTICATION_BACKEND = (
         "platform_plugin_turnitin.edxapp_wrapper.backends.authentication_q_v1"
     )
-    settings.PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND = (
-        "platform_plugin_turnitin.edxapp_wrapper.backends.student_q_v1"
-    )
+    settings.PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND = "platform_plugin_turnitin.edxapp_wrapper.backends.student_q_v1"
     settings.PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND = (
         "platform_plugin_turnitin.edxapp_wrapper.backends.course_overviews_q_v1"
     )
+    settings.PLATFORM_PLUGIN_TURNITIN_MODULESTORE_BACKEND = (
+        "platform_plugin_turnitin.edxapp_wrapper.backends.modulestore_q_v1"
+    )
+    # Template settings
     settings.MAKO_TEMPLATE_DIRS_BASE.append(ROOT_DIRECTORY / "templates/turnitin")

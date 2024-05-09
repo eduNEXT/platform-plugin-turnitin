@@ -63,13 +63,13 @@ TEMPLATES = [
 ]
 
 # Plugin settings
+ENABLE_TURNITIN_SUBMISSION = False
 PLATFORM_PLUGIN_TURNITIN_AUTHENTICATION_BACKEND = (
     "platform_plugin_turnitin.edxapp_wrapper.backends.authentication_q_v1_test"
 )
-PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND = (
-    "platform_plugin_turnitin.edxapp_wrapper.backends.student_q_v1_test"
-)
+PLATFORM_PLUGIN_TURNITIN_STUDENT_BACKEND = "platform_plugin_turnitin.edxapp_wrapper.backends.student_q_v1_test"
 PLATFORM_PLUGIN_TURNITIN_COURSE_OVERVIEWS_BACKEND = (
     "platform_plugin_turnitin.edxapp_wrapper.backends.course_overviews_q_v1_test"
 )
+PLATFORM_PLUGIN_TURNITIN_MODULESTORE_BACKEND = "platform_plugin_turnitin.edxapp_wrapper.backends.modulestore_q_v1_test"
 TURNITIN_SIMILARITY_REPORT_PAYLOAD = {"test_key": "test_value"}
