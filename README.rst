@@ -231,6 +231,20 @@ Settings**:
     "ENABLE_TURNITIN_SUBMISSION": true
   }
 
+Next, you must include the following setting to enable the filter that will
+display the warning message to the learner about Turnitin:
+
+.. code-block:: python
+
+  OPEN_EDX_FILTERS_CONFIG = {
+    "org.openedx.learning.ora.submission_view.render.started.v1": {
+      "fail_silently": False,
+      "pipeline": [
+        "platform_plugin_turnitin.extensions.filters.ORASubmissionViewTurnitinWarning",
+      ]
+    },
+  }
+
 Finally, to use the turnitin API it is necessary to configure the following
 settings in your LMS:
 
