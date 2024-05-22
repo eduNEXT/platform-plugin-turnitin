@@ -25,6 +25,25 @@ instructors are included in the `ORA Grading MFE`_.
 
 .. _ORA Grading MFE: https://github.com/eduNEXT/frontend-app-ora-grading/pull/4
 
+Compatibility Notes
+===================
+
++------------------+--------------+
+| Open edX Release | Version      |
++==================+==============+
+| Palm             | >= 0.2.0     |
++------------------+--------------+
+| Quince           | >= 0.2.0     |
++------------------+--------------+
+| Redwood          | >= 0.2.0     |
++------------------+--------------+
+
+The settings can be changed in ``platform_plugin_turnitin/settings/common.py``
+or, for example, in tutor configurations.
+
+**NOTE**: the current ``common.py`` works with Open edX Palm, Quince and
+Redwood version.
+
 
 Getting Started
 ***************
