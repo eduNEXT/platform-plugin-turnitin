@@ -79,7 +79,7 @@ class TurnitinUploadFileAPIView(GenericAPIView):
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        turnitin_client = TurnitinClient(request.user, uploaded_file)
+        turnitin_client = TurnitinClient(request.user, uploaded_file, group_context=course_id)
         agreement_response = turnitin_client.accept_eula_agreement()
 
         if not agreement_response.ok:
@@ -311,9 +311,11 @@ class TurnitinClient:
             Create a Turnitin similarity viewer for the user's latest submission.
     """
 
-    def __init__(self, user, file=None) -> None:
+    def __init__(self, user, file=None, group=None, group_context=None) -> None:
         self.user = user
         self.file = file
+        self.group = group
+        self.group_context = group_context
         self.first_name, self.last_name = get_fullname(self.user.profile.name)
 
     def accept_eula_agreement(self) -> RequestsResponse:
@@ -375,6 +377,8 @@ class TurnitinClient:
             "submitter_default_permission_set": "LEARNER",
             "extract_text_only": False,
             "metadata": {
+                "group": self.group,
+                "group_context": self.group_context,
                 "owners": [
                     {
                         "id": str(self.user.id),

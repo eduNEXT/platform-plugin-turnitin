@@ -152,6 +152,8 @@ class TestTurnitinClient(TestCase):
             "submitter_default_permission_set": "LEARNER",
             "extract_text_only": False,
             "metadata": {
+                "group": None,
+                "group_context": None,
                 "owners": [
                     {
                         "id": str(self.user.id),
@@ -174,6 +176,30 @@ class TestTurnitinClient(TestCase):
 
         mock_post_create.assert_called_once_with(expected_payload)
         self.assertEqual(result, expected_response)
+
+    @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
+    @patch(f"{VIEWS_MODULE_PATH}.post_create_submission")
+    def test_create_turnitin_submission_object_with_group(
+        self, mock_post_create: Mock, mock_get_current_datetime: Mock
+    ):
+        """
+        Test the `create_turnitin_submission_object` method sends `group`/`group_context` when provided.
+
+        Expected result:
+            - `post_create_submission` is called with the `group` and `group_context` values
+                the `TurnitinClient` was constructed with.
+        """
+        mock_get_current_datetime.return_value = "2023-11-21T16:00:00Z"
+        mock_post_create.return_value = Mock(status_code=status.HTTP_201_CREATED)
+        block_id = "block-v1:edX+DemoX+Demo_Course+type@openassessment+block@abc123"
+        course_id = "course-v1:edX+DemoX+Demo_Course"
+        turnitin_client = TurnitinClient(self.user, self.file, group=block_id, group_context=course_id)
+
+        turnitin_client.create_turnitin_submission_object()
+
+        metadata = mock_post_create.call_args.args[0]["metadata"]
+        self.assertEqual(metadata["group"], block_id)
+        self.assertEqual(metadata["group_context"], course_id)
 
     @patch(f"{VIEWS_MODULE_PATH}.sleep")
     @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")

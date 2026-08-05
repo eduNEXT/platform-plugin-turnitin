@@ -27,6 +27,12 @@ Added
   transient network blip no longer aborts the whole submission and requires a learner to
   manually resubmit. This does not change the report-generation polling loop, add webhooks, or
   add bulk resubmit — those remain roadmap items.
+* Send ``group`` (the ORA assignment's XBlock usage key) and ``group_context`` (its course key)
+  in the Create Submission payload's ``metadata``, so submissions can be grouped in Turnitin by
+  assignment and course. ``TurnitinClient`` gained optional ``group``/``group_context``
+  constructor parameters. Fully populated on the Celery/ORA event path (both values are known
+  there); the direct ``upload-file`` REST endpoint only has ``course_id`` available, so it
+  sends ``group_context`` but not ``group``.
 
 Changed
 =======

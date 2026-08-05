@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 import requests
 from celery import shared_task
 from django.conf import settings
+from opaque_keys.edx.keys import UsageKey
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -33,6 +34,7 @@ def ora_submission_created_task(
     parts: List[dict],
     file_names: List[str],
     file_urls: List[str],
+    block_id: str,
 ) -> None:
     """
     Task to handle the creation of a new ora submission.
@@ -43,11 +45,12 @@ def ora_submission_created_task(
         parts (List[dict]): The parts of the submission with the answers.
         file_names (List[str]): The list of file names.
         file_urls (List[str]): The list of file URLs.
+        block_id (str): The XBlock usage key of the ORA assignment.
     """
     user = user_by_anonymous_id(anonymous_user_id)
 
-    send_text_to_turnitin(submission_uuid, user, parts)
-    send_uploaded_files_to_turnitin(submission_uuid, user, file_names, file_urls)
+    send_text_to_turnitin(submission_uuid, user, parts, block_id)
+    send_uploaded_files_to_turnitin(submission_uuid, user, file_names, file_urls, block_id)
 
     for _ in range(MAX_REQUEST_RETRIES):
         if is_submission_complete(submission_uuid, user):
@@ -56,7 +59,7 @@ def ora_submission_created_task(
         sleep(SECONDS_TO_WAIT_BETWEEN_RETRIES)
 
 
-def send_text_to_turnitin(ora_submission_uuid: str, user, parts: List[dict]) -> None:
+def send_text_to_turnitin(ora_submission_uuid: str, user, parts: List[dict], block_id: str) -> None:
     """
     Task to send text to Turnitin.
 
@@ -64,14 +67,17 @@ def send_text_to_turnitin(ora_submission_uuid: str, user, parts: List[dict]) -> 
         ora_submission_uuid (str): The ORA submission UUID.
         user (User): The user who made the submission.
         parts (List[dict]): The answer of the submission.
+        block_id (str): The XBlock usage key of the ORA assignment.
     """
     for idx, part in enumerate(parts, 1):
         text_content = part.get("text").encode("utf-8")
-        send_file_to_turnitin(ora_submission_uuid, user, text_content, f"Student's Text Response Part {idx}.txt")
+        send_file_to_turnitin(
+            ora_submission_uuid, user, text_content, f"Student's Text Response Part {idx}.txt", block_id
+        )
 
 
 def send_uploaded_files_to_turnitin(
-    ora_submission_uuid: str, user, file_names: List[str], file_urls: List[str]
+    ora_submission_uuid: str, user, file_names: List[str], file_urls: List[str], block_id: str
 ) -> None:
     """
     Task to send uploaded files to Turnitin.
@@ -81,6 +87,7 @@ def send_uploaded_files_to_turnitin(
         user (User): The user who made the submission.
         file_names (List[str]): The list of file names.
         file_urls (List[str]): The list of file URLs.
+        block_id (str): The XBlock usage key of the ORA assignment.
     """
     base_url = getattr(settings, "LMS_ROOT_URL", "")
 
@@ -97,14 +104,14 @@ def send_uploaded_files_to_turnitin(
                 response = requests.get(file_link, timeout=REQUEST_TIMEOUT)
 
             if response.ok:
-                send_file_to_turnitin(ora_submission_uuid, user, response.content, file_name)
+                send_file_to_turnitin(ora_submission_uuid, user, response.content, file_name, block_id)
             else:
                 raise Exception(f"Failed to download file from {file_link}")
         else:
             log.info(f"Skipping uploading file [{file_name}] because it has not an allowed extension.")
 
 
-def send_file_to_turnitin(submission_id: str, user, file_content: bytes, filename: str) -> None:
+def send_file_to_turnitin(submission_id: str, user, file_content: bytes, filename: str, block_id: str) -> None:
     """
     Send a file to Turnitin.
 
@@ -116,15 +123,16 @@ def send_file_to_turnitin(submission_id: str, user, file_content: bytes, filenam
         user (User): The user who made the submission.
         file_content (bytes): The content of the file.
         filename (str): The name of the file.
+        block_id (str): The XBlock usage key of the ORA assignment.
     """
     with tempfile.NamedTemporaryFile() as temp_file:
         temp_file.write(file_content)
         temp_file.seek(0)
         temp_file.name = filename
-        upload_turnitin_submission(submission_id, user, temp_file)
+        upload_turnitin_submission(submission_id, user, temp_file, block_id)
 
 
-def upload_turnitin_submission(ora_submission_uuid: str, user, file) -> None:
+def upload_turnitin_submission(ora_submission_uuid: str, user, file, block_id: str) -> None:
     """
     Create a new submission in Turnitin.
 
@@ -134,8 +142,11 @@ def upload_turnitin_submission(ora_submission_uuid: str, user, file) -> None:
         ora_submission_uuid (str): The ORA submission UUID.
         user (User): The user who made the submission.
         file (File): The file to upload.
+        block_id (str): The XBlock usage key of the ORA assignment, sent to Turnitin as the
+            submission's `group`, with its course as `group_context`.
     """
-    turnitin_client = TurnitinClient(user, file)
+    group_context = str(UsageKey.from_string(block_id).course_key)
+    turnitin_client = TurnitinClient(user, file, group=block_id, group_context=group_context)
 
     agreement_response = turnitin_client.accept_eula_agreement()
 

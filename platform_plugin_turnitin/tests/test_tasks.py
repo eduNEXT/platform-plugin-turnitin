@@ -35,6 +35,8 @@ class TestOraSubmissionCreatedTask(TestCase):
         self.file_urls = ["/download/file1.txt", "/download/file2.doc"]
         self.user = Mock()
         self.file = Mock()
+        self.block_id = "block-v1:edX+DemoX+Demo_Course+type@openassessment+block@abc123"
+        self.course_id = "course-v1:edX+DemoX+Demo_Course"
 
     @patch(f"{TASKS_MODULE_PATH}.user_by_anonymous_id")
     @patch(f"{TASKS_MODULE_PATH}.send_text_to_turnitin")
@@ -62,16 +64,17 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_is_submission_complete.return_value = True
 
         ora_submission_created_task(
-            self.submission_uuid, self.anonymous_user_id, self.parts, self.file_names, self.file_urls
+            self.submission_uuid, self.anonymous_user_id, self.parts, self.file_names, self.file_urls, self.block_id
         )
 
         mock_user_by_anonymous_id.assert_called_once_with(self.anonymous_user_id)
-        mock_send_text_to_turnitin.assert_called_once_with(self.submission_uuid, self.user, self.parts)
+        mock_send_text_to_turnitin.assert_called_once_with(self.submission_uuid, self.user, self.parts, self.block_id)
         mock_send_uploaded_files_to_turnitin.assert_called_once_with(
             self.submission_uuid,
             self.user,
             self.file_names,
             self.file_urls,
+            self.block_id,
         )
         mock_is_submission_complete.assert_called()
         mock_generate_similarity_report.assert_called_once_with(self.submission_uuid, self.user)
@@ -106,13 +109,13 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_is_submission_complete.side_effect = [False] * (MAX_REQUEST_RETRIES - 1) + [True]
 
         ora_submission_created_task(
-            self.submission_uuid, self.anonymous_user_id, self.parts, self.file_names, self.file_urls
+            self.submission_uuid, self.anonymous_user_id, self.parts, self.file_names, self.file_urls, self.block_id
         )
 
         mock_user_by_anonymous_id.assert_called_once_with(self.anonymous_user_id)
-        mock_send_text_to_turnitin.assert_called_once_with(self.submission_uuid, self.user, self.parts)
+        mock_send_text_to_turnitin.assert_called_once_with(self.submission_uuid, self.user, self.parts, self.block_id)
         mock_send_uploaded_files_to_turnitin.assert_called_once_with(
-            self.submission_uuid, self.user, self.file_names, self.file_urls
+            self.submission_uuid, self.user, self.file_names, self.file_urls, self.block_id
         )
         self.assertEqual(mock_is_submission_complete.call_count, MAX_REQUEST_RETRIES)
         mock_generate_similarity_report.assert_called_once_with(self.submission_uuid, self.user)
@@ -129,11 +132,11 @@ class TestOraSubmissionCreatedTask(TestCase):
         """
         response_txt = "Student's Text Response Part {}.txt"
 
-        send_text_to_turnitin(self.submission_uuid, self.user, self.parts)
+        send_text_to_turnitin(self.submission_uuid, self.user, self.parts, self.block_id)
 
         calls = [
-            call(self.submission_uuid, self.user, "part1".encode("utf-8"), response_txt.format(1)),
-            call(self.submission_uuid, self.user, "part2".encode("utf-8"), response_txt.format(2)),
+            call(self.submission_uuid, self.user, "part1".encode("utf-8"), response_txt.format(1), self.block_id),
+            call(self.submission_uuid, self.user, "part2".encode("utf-8"), response_txt.format(2), self.block_id),
         ]
         mock_send_file_to_turnitin.assert_has_calls(calls)
 
@@ -145,7 +148,7 @@ class TestOraSubmissionCreatedTask(TestCase):
         Expected result:
             - `send_file_to_turnitin` function is not called.
         """
-        send_text_to_turnitin(self.submission_uuid, self.user, [])
+        send_text_to_turnitin(self.submission_uuid, self.user, [], self.block_id)
 
         self.assertFalse(mock_send_file_to_turnitin.called)
 
@@ -163,11 +166,11 @@ class TestOraSubmissionCreatedTask(TestCase):
         file_urls = ["/download/file1.txt", "/download/file2.doc"]
         mock_get.return_value = Mock(ok=True, content=b"file content")
 
-        send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls)
+        send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls, self.block_id)
 
         calls = [
-            call(self.submission_uuid, self.user, b"file content", "file1.txt"),
-            call(self.submission_uuid, self.user, b"file content", "file2.doc"),
+            call(self.submission_uuid, self.user, b"file content", "file1.txt", self.block_id),
+            call(self.submission_uuid, self.user, b"file content", "file2.doc", self.block_id),
         ]
         mock_send_file_to_turnitin.assert_has_calls(calls)
         self.assertEqual(mock_send_file_to_turnitin.call_count, 2)
@@ -193,7 +196,7 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_get.return_value = Mock(ok=False)
 
         with self.assertRaises(Exception) as context:
-            send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls)
+            send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls, self.block_id)
 
         mock_send_file_to_turnitin.assert_not_called()
         self.assertEqual(exception_message, str(context.exception))
@@ -216,10 +219,10 @@ class TestOraSubmissionCreatedTask(TestCase):
         file_urls = ["/download/file1.txt"]
         mock_get.side_effect = [Mock(ok=False), Mock(ok=True, content=b"file content")]
 
-        send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls)
+        send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls, self.block_id)
 
         mock_send_file_to_turnitin.assert_called_once_with(
-            self.submission_uuid, self.user, b"file content", "file1.txt"
+            self.submission_uuid, self.user, b"file content", "file1.txt", self.block_id
         )
         self.assertEqual(mock_get.call_count, 2)
         mock_sleep.assert_called_once()
@@ -240,12 +243,14 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_file = mock_temp_file.return_value.__enter__.return_value
         mock_file.name = filename
 
-        send_file_to_turnitin(self.submission_uuid, self.user, file_content, filename)
+        send_file_to_turnitin(self.submission_uuid, self.user, file_content, filename, self.block_id)
 
         mock_temp_file.assert_called_once()
         mock_file.write.assert_called_once_with(file_content)
         mock_file.seek.assert_called_once_with(0)
-        mock_upload_turnitin_submission.assert_called_once_with(self.submission_uuid, self.user, mock_file)
+        mock_upload_turnitin_submission.assert_called_once_with(
+            self.submission_uuid, self.user, mock_file, self.block_id
+        )
 
     @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
     def test_upload_turnitin_submission(self, mock_turnitin_client: Mock):
@@ -260,9 +265,11 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_turnitin_client_instance = mock_turnitin_client.return_value
         mock_turnitin_client_instance.accept_eula_agreement.return_value.ok = True
 
-        upload_turnitin_submission(self.submission_uuid, self.user, self.file)
+        upload_turnitin_submission(self.submission_uuid, self.user, self.file, self.block_id)
 
-        mock_turnitin_client.assert_called_once_with(self.user, self.file)
+        mock_turnitin_client.assert_called_once_with(
+            self.user, self.file, group=self.block_id, group_context=self.course_id
+        )
         mock_turnitin_client_instance.accept_eula_agreement.assert_called_once()
         mock_turnitin_client_instance.upload_turnitin_submission_file.assert_called_once_with(self.submission_uuid)
 
@@ -282,10 +289,12 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_turnitin_client_instance.accept_eula_agreement.return_value.ok = False
 
         with self.assertRaises(Exception) as context:
-            upload_turnitin_submission(self.submission_uuid, self.user, self.file)
+            upload_turnitin_submission(self.submission_uuid, self.user, self.file, self.block_id)
 
         self.assertEqual("Failed to accept the EULA agreement.", str(context.exception))
-        mock_turnitin_client.assert_called_once_with(self.user, self.file)
+        mock_turnitin_client.assert_called_once_with(
+            self.user, self.file, group=self.block_id, group_context=self.course_id
+        )
         self.assertEqual(mock_turnitin_client_instance.accept_eula_agreement.call_count, SUBMISSION_RETRY_ATTEMPTS)
         self.assertEqual(mock_sleep.call_count, SUBMISSION_RETRY_ATTEMPTS - 1)
         mock_turnitin_client_instance.upload_turnitin_submission_file.assert_not_called()
@@ -302,7 +311,7 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_turnitin_client_instance = mock_turnitin_client.return_value
         mock_turnitin_client_instance.accept_eula_agreement.side_effect = [Mock(ok=False), Mock(ok=True)]
 
-        upload_turnitin_submission(self.submission_uuid, self.user, self.file)
+        upload_turnitin_submission(self.submission_uuid, self.user, self.file, self.block_id)
 
         self.assertEqual(mock_turnitin_client_instance.accept_eula_agreement.call_count, 2)
         mock_sleep.assert_called_once()
