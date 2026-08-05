@@ -144,23 +144,23 @@ class TestTurnitinClient(TestCase):
         expected_response = Mock(status_code=status.HTTP_201_CREATED)
         mock_post_create.return_value = expected_response
         expected_payload = {
-            "owner": self.user.id,
+            "owner": str(self.user.id),
             "title": f"{self.file.name}-{self.user.username}",
-            "submitter": self.user.id,
+            "submitter": str(self.user.id),
             "owner_default_permission_set": "LEARNER",
             "submitter_default_permission_set": "LEARNER",
             "extract_text_only": False,
             "metadata": {
                 "owners": [
                     {
-                        "id": self.user.id,
+                        "id": str(self.user.id),
                         "given_name": self.turnitin_client.first_name,
                         "family_name": self.turnitin_client.last_name,
                         "email": self.user.email,
                     }
                 ],
                 "submitter": {
-                    "id": self.user.id,
+                    "id": str(self.user.id),
                     "given_name": self.turnitin_client.first_name,
                     "family_name": self.turnitin_client.last_name,
                     "email": self.user.email,
@@ -359,7 +359,7 @@ class TestTurnitinClient(TestCase):
 
         mock_get_submissions.assert_called_once_with(self.ora_submission_id)
         expected_payload = {
-            "viewer_user_id": self.user.id,
+            "viewer_user_id": str(self.user.id),
             "locale": "en-US",
             "viewer_default_permission_set": "INSTRUCTOR",
             "viewer_permissions": {
@@ -425,7 +425,7 @@ class TestTurnitinClient(TestCase):
 
         mock_get_submissions.assert_called_once_with(self.ora_submission_id)
         expected_payload = {
-            "viewer_user_id": self.user.id,
+            "viewer_user_id": str(self.user.id),
             "locale": "en-US",
             "viewer_default_permission_set": "INSTRUCTOR",
             "viewer_permissions": {

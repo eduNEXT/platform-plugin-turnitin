@@ -357,23 +357,23 @@ class TurnitinClient:
             RequestsResponse: The response after creating the Turnitin submission object.
         """
         payload = {
-            "owner": self.user.id,
+            "owner": str(self.user.id),
             "title": f"{self.file.name}-{self.user.username}",
-            "submitter": self.user.id,
+            "submitter": str(self.user.id),
             "owner_default_permission_set": "LEARNER",
             "submitter_default_permission_set": "LEARNER",
             "extract_text_only": False,
             "metadata": {
                 "owners": [
                     {
-                        "id": self.user.id,
+                        "id": str(self.user.id),
                         "given_name": self.first_name,
                         "family_name": self.last_name,
                         "email": self.user.email,
                     }
                 ],
                 "submitter": {
-                    "id": self.user.id,
+                    "id": str(self.user.id),
                     "given_name": self.first_name,
                     "family_name": self.last_name,
                     "email": self.user.email,
@@ -468,7 +468,7 @@ class TurnitinClient:
             return submissions
 
         payload = {
-            "viewer_user_id": self.user.id,
+            "viewer_user_id": str(self.user.id),
             "locale": "en-US",
             "viewer_default_permission_set": "INSTRUCTOR",
             "viewer_permissions": {

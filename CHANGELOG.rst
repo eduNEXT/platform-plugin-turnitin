@@ -45,6 +45,9 @@ Fixed
   actually being granted it.
 * Remove the leading slash in ``get_eula_page()``'s URL prefix, which produced a double slash
   when concatenated with ``turnitin_api_handler()``'s base URL.
+* Normalise the user ID to a string (``str(self.user.id)``) everywhere it's sent to Turnitin —
+  ``owner``, ``submitter``, ``metadata.owners[].id``, ``metadata.submitter.id``, and
+  ``viewer_user_id`` — to match the EULA acceptance payload, which already sent it as a string.
 
 0.3.0 - 2024-05-09
 **********************************************
