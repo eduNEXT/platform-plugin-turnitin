@@ -290,6 +290,11 @@ settings in your LMS:
   # TURNITIN_TCA_INTEGRATION_VERSION is optional: it defaults to the RELEASE_LINE setting,
   # falling back to "turnitin-openedx-platform-plugin <plugin-version>" if RELEASE_LINE is unset.
   TURNITIN_TCA_INTEGRATION_VERSION = "redwood"
+  # TURNITIN_TCA_REQUIRE_EULA is optional and defaults to True. Set it to False only if your
+  # Turnitin tenant is confirmed not to require EULA display and acceptance (see Turnitin's
+  # "Get Features Enabled" endpoint, tenant.require_eula); doing so skips both the EULA
+  # rendering filter and the acceptance check on upload.
+  TURNITIN_TCA_REQUIRE_EULA = True
 
 Tutor plugin example
 =====================
@@ -380,7 +385,30 @@ from Turnitin's documented workflow description. See
 ``resolve_current_eula_version()`` in ``utils.py`` if you need to adapt it
 to a different schema.
 
+The accepted EULA version is also confirmed to Turnitin as part of the
+submission itself: ``create_turnitin_submission_object()`` sends an optional
+``eula`` attribute (``accepted_timestamp``, ``language``, ``version``) on the
+Create Submission call, reusing the values already resolved for the
+accept-eula step. This shape is likewise inferred from Turnitin's documented
+workflow, not confirmed against their API reference.
+
 .. _edx-ora2: https://github.com/openedx/edx-ora2
+
+
+Similarity Report Polling
+****************************
+
+After a submission is uploaded, this plugin waits for Turnitin to finish
+processing it before generating the similarity report. Following Turnitin's
+documented polling guidance, ``check_submission_status_task`` does not poll
+in a tight loop or block a Celery worker while waiting: it checks the
+submission's status once, and if it isn't complete yet, reschedules itself
+``SECONDS_TO_WAIT_BETWEEN_RETRIES`` seconds later (default 30 minutes,
+matching Turnitin's guidance to wait 30 minutes after upload and every 30
+minutes thereafter) via Celery's ``apply_async(countdown=...)``. It gives up
+after ``MAX_REQUEST_RETRIES`` checks (default 25) if the submission still
+hasn't completed. Both values are configurable in ``constants.py`` if your
+deployment needs a different cadence.
 
 
 Getting Help

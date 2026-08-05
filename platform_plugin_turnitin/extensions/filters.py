@@ -22,9 +22,10 @@ class ORASubmissionViewTurnitinWarning(PipelineStep):
         will be sent to Turnitin, Turnitin's current EULA text rendered inline, and a checkbox
         that calls the accept-eula endpoint before allowing submission.
 
-        If the Turnitin feature is not enabled globally or in the course, the original
-        template is returned. If fetching the EULA content fails, the template falls back to
-        linking out to it rather than failing the whole page render.
+        If the Turnitin feature is not enabled globally or in the course, or if
+        `TURNITIN_TCA_REQUIRE_EULA` is False for a tenant confirmed not to require it, the
+        original template is returned. If fetching the EULA content fails, the template falls
+        back to linking out to it rather than failing the whole page render.
 
         Args:
             context (dict): The context dictionary.
@@ -33,7 +34,9 @@ class ORASubmissionViewTurnitinWarning(PipelineStep):
         Returns:
             dict: The context dictionary and the template name.
         """
-        if settings.ENABLE_TURNITIN_SUBMISSION or enabled_in_course(context["xblock_id"]):
+        turnitin_enabled = settings.ENABLE_TURNITIN_SUBMISSION or enabled_in_course(context["xblock_id"])
+
+        if turnitin_enabled and settings.TURNITIN_TCA_REQUIRE_EULA:
             course_id = str(UsageKey.from_string(context["xblock_id"]).course_key)
             context = {
                 **context,

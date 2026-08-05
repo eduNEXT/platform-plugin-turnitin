@@ -52,11 +52,42 @@ def ora_submission_created_task(
     send_text_to_turnitin(submission_uuid, user, parts, block_id)
     send_uploaded_files_to_turnitin(submission_uuid, user, file_names, file_urls, block_id)
 
-    for _ in range(MAX_REQUEST_RETRIES):
-        if is_submission_complete(submission_uuid, user):
-            generate_similarity_report(submission_uuid, user)
-            break
-        sleep(SECONDS_TO_WAIT_BETWEEN_RETRIES)
+    check_submission_status_task.apply_async(
+        args=[submission_uuid, anonymous_user_id],
+        countdown=SECONDS_TO_WAIT_BETWEEN_RETRIES,
+    )
+
+
+@shared_task
+def check_submission_status_task(submission_uuid: str, anonymous_user_id: str, attempt: int = 1) -> None:
+    """
+    Check whether a Turnitin submission is complete, rescheduling itself if not.
+
+    Following Turnitin's documented polling guidance, this does not block a Celery worker with
+    a sleep: each run checks once and either generates the report, gives up after
+    `MAX_REQUEST_RETRIES` attempts, or reschedules itself `SECONDS_TO_WAIT_BETWEEN_RETRIES`
+    seconds later.
+
+    Args:
+        submission_uuid (str): The ORA submission UUID.
+        anonymous_user_id (str): The anonymous user ID.
+        attempt (int): The number of this check, starting at 1.
+    """
+    user = user_by_anonymous_id(anonymous_user_id)
+
+    if is_submission_complete(submission_uuid, user):
+        generate_similarity_report(submission_uuid, user)
+        return
+
+    if attempt >= MAX_REQUEST_RETRIES:
+        log.info(f"Submission [{submission_uuid}] did not complete after {attempt} checks. Giving up.")
+        return
+
+    check_submission_status_task.apply_async(
+        args=[submission_uuid, anonymous_user_id],
+        kwargs={"attempt": attempt + 1},
+        countdown=SECONDS_TO_WAIT_BETWEEN_RETRIES,
+    )
 
 
 def send_text_to_turnitin(ora_submission_uuid: str, user, parts: List[dict], block_id: str) -> None:

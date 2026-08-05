@@ -48,9 +48,27 @@ Changed
   tradeoff worth knowing about. The exact response shape of ``GET /eula/latest`` (assumed to
   carry the version under a ``"version"`` key) is inferred, not confirmed against Turnitin's
   documented schema.
+* Replace the blocking similarity-report polling loop with a self-rescheduling Celery task,
+  ``check_submission_status_task``, and change the default wait from 5 seconds to Turnitin's
+  documented guidance of 30 minutes (``SECONDS_TO_WAIT_BETWEEN_RETRIES`` in ``constants.py``).
+  Previously ``ora_submission_created_task`` called ``time.sleep()`` in a loop, holding a Celery
+  worker for the entire polling window. It now returns immediately after uploading the
+  submission and schedules the first status check via ``apply_async(countdown=...)``; each check
+  either generates the similarity report, gives up after ``MAX_REQUEST_RETRIES`` attempts, or
+  reschedules itself, so no worker is ever blocked waiting on Turnitin.
 
 Added
 =====
+
+* Send the optional ``eula`` attribute (``accepted_timestamp``, ``language``, ``version``) on the
+  Create Submission payload, confirming to Turnitin the accepted EULA version as part of the
+  submission itself. Reuses the values already computed for the accept-eula call, so no new
+  outbound requests are needed. The exact shape of this attribute is inferred from Turnitin's
+  documented workflow, not confirmed against their API reference.
+* Add a ``TURNITIN_TCA_REQUIRE_EULA`` Django setting (default ``True``) so operators on a
+  Turnitin tenant confirmed not to require EULA display and acceptance (see Turnitin's
+  ``Get Features Enabled`` endpoint, ``tenant.require_eula``) can turn that flow off with a
+  single setting, instead of the plugin always assuming it's required.
 
 * Retry, with a short wait between attempts, the points that previously raised an unrecoverable
   exception (or silently failed) on the first failure: downloading a learner's uploaded file

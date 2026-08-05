@@ -396,10 +396,15 @@ class TurnitinClient:
 
         Retries a few times on failure before concluding the user has not accepted, since a
         network blip on the check itself shouldn't be treated the same as a real "not accepted".
+        Always True if `TURNITIN_TCA_REQUIRE_EULA` is False for a tenant confirmed not to
+        require EULA acceptance.
 
         Returns:
             bool: True if Turnitin confirms this user has accepted its current EULA version.
         """
+        if not settings.TURNITIN_TCA_REQUIRE_EULA:
+            return True
+
         version = resolve_current_eula_version()
         response = get_eula_acceptance_by_user(str(self.user.id), version=version)
 
@@ -456,6 +461,12 @@ class TurnitinClient:
         """
         Create a Turnitin submission object based on the user's data.
 
+        Only called after `has_accepted_eula()` has confirmed acceptance (see
+        `upload_turnitin_submission_file`), so the optional `eula` attribute is always included,
+        confirming the accepted version to Turnitin as part of the submission itself. The exact
+        shape of this attribute is inferred from Turnitin's documented workflow, not confirmed
+        against their API reference.
+
         Returns:
             RequestsResponse: The response after creating the Turnitin submission object.
         """
@@ -466,6 +477,11 @@ class TurnitinClient:
             "owner_default_permission_set": "LEARNER",
             "submitter_default_permission_set": "LEARNER",
             "extract_text_only": False,
+            "eula": {
+                "accepted_timestamp": get_current_datetime(),
+                "language": get_turnitin_locale(),
+                "version": resolve_current_eula_version(),
+            },
             "metadata": {
                 "group": self.group,
                 "group_context": self.group_context,

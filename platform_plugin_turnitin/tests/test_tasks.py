@@ -5,7 +5,9 @@ from unittest.mock import Mock, call, patch
 
 from rest_framework import status
 
+from platform_plugin_turnitin.constants import MAX_REQUEST_RETRIES, SECONDS_TO_WAIT_BETWEEN_RETRIES
 from platform_plugin_turnitin.tasks import (
+    check_submission_status_task,
     generate_similarity_report,
     get_submission_status,
     is_submission_complete,
@@ -19,8 +21,6 @@ from platform_plugin_turnitin.tasks import (
 TASKS_MODULE_PATH = "platform_plugin_turnitin.tasks"
 
 
-MAX_REQUEST_RETRIES = 3
-SECONDS_TO_WAIT_BETWEEN_RETRIES = 1
 SUBMISSION_RETRY_ATTEMPTS = 3
 
 
@@ -41,12 +41,10 @@ class TestOraSubmissionCreatedTask(TestCase):
     @patch(f"{TASKS_MODULE_PATH}.user_by_anonymous_id")
     @patch(f"{TASKS_MODULE_PATH}.send_text_to_turnitin")
     @patch(f"{TASKS_MODULE_PATH}.send_uploaded_files_to_turnitin")
-    @patch(f"{TASKS_MODULE_PATH}.is_submission_complete")
-    @patch(f"{TASKS_MODULE_PATH}.generate_similarity_report")
+    @patch(f"{TASKS_MODULE_PATH}.check_submission_status_task.apply_async")
     def test_ora_submission_created_task(
         self,
-        mock_generate_similarity_report: Mock,
-        mock_is_submission_complete: Mock,
+        mock_apply_async: Mock,
         mock_send_uploaded_files_to_turnitin: Mock,
         mock_send_text_to_turnitin: Mock,
         mock_user_by_anonymous_id: Mock,
@@ -59,9 +57,10 @@ class TestOraSubmissionCreatedTask(TestCase):
             - `send_text_to_turnitin` is called once with the submission_id, user and parts.
             - `send_uploaded_files_to_turnitin` is called once with the submission_uuid,
                 user, file_names and file_urls.
+            - `check_submission_status_task` is scheduled, not run inline, so a Celery worker
+                is never blocked waiting on Turnitin.
         """
         mock_user_by_anonymous_id.return_value = self.user
-        mock_is_submission_complete.return_value = True
 
         ora_submission_created_task(
             self.submission_uuid, self.anonymous_user_id, self.parts, self.file_names, self.file_urls, self.block_id
@@ -76,50 +75,10 @@ class TestOraSubmissionCreatedTask(TestCase):
             self.file_urls,
             self.block_id,
         )
-        mock_is_submission_complete.assert_called()
-        mock_generate_similarity_report.assert_called_once_with(self.submission_uuid, self.user)
-
-    @patch(f"{TASKS_MODULE_PATH}.user_by_anonymous_id")
-    @patch(f"{TASKS_MODULE_PATH}.send_text_to_turnitin")
-    @patch(f"{TASKS_MODULE_PATH}.send_uploaded_files_to_turnitin")
-    @patch(f"{TASKS_MODULE_PATH}.is_submission_complete")
-    @patch(f"{TASKS_MODULE_PATH}.generate_similarity_report")
-    @patch(f"{TASKS_MODULE_PATH}.sleep")
-    def test_ora_submission_created_task_with_retries(
-        self,
-        mock_sleep: Mock,
-        mock_generate_similarity_report: Mock,
-        mock_is_submission_complete: Mock,
-        mock_send_uploaded_files_to_turnitin: Mock,
-        mock_send_text_to_turnitin: Mock,
-        mock_user_by_anonymous_id: Mock,
-    ):
-        """
-        Test the `ora_submission_created_task` function with retries.
-
-        Expected result:
-            - `user_by_anonymous_id` is called once with the anonymous_user_id.
-            - `send_text_to_turnitin` is called once with the submission_uuid, user and parts.
-            - `send_uploaded_files_to_turnitin` is called once with the submission_uuid,
-                user, file_names and file_urls.
-            - `is_submission_complete` is called MAX_REQUEST_RETRIES times.
-            - `generate_similarity_report` is called once.
-        """
-        mock_user_by_anonymous_id.return_value = self.user
-        mock_is_submission_complete.side_effect = [False] * (MAX_REQUEST_RETRIES - 1) + [True]
-
-        ora_submission_created_task(
-            self.submission_uuid, self.anonymous_user_id, self.parts, self.file_names, self.file_urls, self.block_id
+        mock_apply_async.assert_called_once_with(
+            args=[self.submission_uuid, self.anonymous_user_id],
+            countdown=SECONDS_TO_WAIT_BETWEEN_RETRIES,
         )
-
-        mock_user_by_anonymous_id.assert_called_once_with(self.anonymous_user_id)
-        mock_send_text_to_turnitin.assert_called_once_with(self.submission_uuid, self.user, self.parts, self.block_id)
-        mock_send_uploaded_files_to_turnitin.assert_called_once_with(
-            self.submission_uuid, self.user, self.file_names, self.file_urls, self.block_id
-        )
-        self.assertEqual(mock_is_submission_complete.call_count, MAX_REQUEST_RETRIES)
-        mock_generate_similarity_report.assert_called_once_with(self.submission_uuid, self.user)
-        self.assertEqual(mock_sleep.call_count, MAX_REQUEST_RETRIES - 1)
 
     @patch(f"{TASKS_MODULE_PATH}.send_file_to_turnitin")
     def test_send_text_to_turnitin(self, mock_send_file_to_turnitin: Mock):
@@ -437,3 +396,95 @@ class TestOraSubmissionCreatedTask(TestCase):
 
         mock_turnitin_client.assert_called_once_with(self.user)
         mock_turnitin_client_instance.generate_similarity_report.assert_called_once_with(self.submission_uuid)
+
+
+class TestCheckSubmissionStatusTask(TestCase):
+    """Tests for the check_submission_status_task function."""
+
+    def setUp(self) -> None:
+        self.submission_uuid = "test-submission-uuid"
+        self.anonymous_user_id = "test-anonymous-user-id"
+        self.user = Mock()
+
+    @patch(f"{TASKS_MODULE_PATH}.user_by_anonymous_id")
+    @patch(f"{TASKS_MODULE_PATH}.is_submission_complete")
+    @patch(f"{TASKS_MODULE_PATH}.generate_similarity_report")
+    @patch(f"{TASKS_MODULE_PATH}.check_submission_status_task.apply_async")
+    def test_check_submission_status_task_complete(
+        self,
+        mock_apply_async: Mock,
+        mock_generate_similarity_report: Mock,
+        mock_is_submission_complete: Mock,
+        mock_user_by_anonymous_id: Mock,
+    ):
+        """
+        Test `check_submission_status_task` when the submission is already complete.
+
+        Expected result:
+            - `generate_similarity_report` is called once.
+            - The task does not reschedule itself.
+        """
+        mock_user_by_anonymous_id.return_value = self.user
+        mock_is_submission_complete.return_value = True
+
+        check_submission_status_task(self.submission_uuid, self.anonymous_user_id)
+
+        mock_user_by_anonymous_id.assert_called_once_with(self.anonymous_user_id)
+        mock_generate_similarity_report.assert_called_once_with(self.submission_uuid, self.user)
+        mock_apply_async.assert_not_called()
+
+    @patch(f"{TASKS_MODULE_PATH}.user_by_anonymous_id")
+    @patch(f"{TASKS_MODULE_PATH}.is_submission_complete")
+    @patch(f"{TASKS_MODULE_PATH}.generate_similarity_report")
+    @patch(f"{TASKS_MODULE_PATH}.check_submission_status_task.apply_async")
+    def test_check_submission_status_task_reschedules(
+        self,
+        mock_apply_async: Mock,
+        mock_generate_similarity_report: Mock,
+        mock_is_submission_complete: Mock,
+        mock_user_by_anonymous_id: Mock,
+    ):
+        """
+        Test `check_submission_status_task` when the submission is not complete yet.
+
+        Expected result:
+            - `generate_similarity_report` is not called.
+            - The task reschedules itself for another check, incrementing the attempt count.
+        """
+        mock_user_by_anonymous_id.return_value = self.user
+        mock_is_submission_complete.return_value = False
+
+        check_submission_status_task(self.submission_uuid, self.anonymous_user_id, attempt=1)
+
+        mock_generate_similarity_report.assert_not_called()
+        mock_apply_async.assert_called_once_with(
+            args=[self.submission_uuid, self.anonymous_user_id],
+            kwargs={"attempt": 2},
+            countdown=SECONDS_TO_WAIT_BETWEEN_RETRIES,
+        )
+
+    @patch(f"{TASKS_MODULE_PATH}.user_by_anonymous_id")
+    @patch(f"{TASKS_MODULE_PATH}.is_submission_complete")
+    @patch(f"{TASKS_MODULE_PATH}.generate_similarity_report")
+    @patch(f"{TASKS_MODULE_PATH}.check_submission_status_task.apply_async")
+    def test_check_submission_status_task_gives_up_after_max_retries(
+        self,
+        mock_apply_async: Mock,
+        mock_generate_similarity_report: Mock,
+        mock_is_submission_complete: Mock,
+        mock_user_by_anonymous_id: Mock,
+    ):
+        """
+        Test `check_submission_status_task` gives up after `MAX_REQUEST_RETRIES` attempts.
+
+        Expected result:
+            - `generate_similarity_report` is not called.
+            - The task does not reschedule itself.
+        """
+        mock_user_by_anonymous_id.return_value = self.user
+        mock_is_submission_complete.return_value = False
+
+        check_submission_status_task(self.submission_uuid, self.anonymous_user_id, attempt=MAX_REQUEST_RETRIES)
+
+        mock_generate_similarity_report.assert_not_called()
+        mock_apply_async.assert_not_called()

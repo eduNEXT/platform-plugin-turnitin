@@ -236,10 +236,11 @@ class TestTurnitinClient(TestCase):
         self.assertEqual(mock_get_eula_acceptance.call_count, 2)
         mock_sleep.assert_called_once()
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
     @patch(f"{VIEWS_MODULE_PATH}.post_create_submission")
     def test_create_turnitin_submission_object(
-        self, mock_post_create: Mock, mock_get_current_datetime: Mock
+        self, mock_post_create: Mock, mock_get_current_datetime: Mock, mock_resolve_version: Mock
     ):
         """
         Test the `create_turnitin_submission_object` method.
@@ -249,6 +250,7 @@ class TestTurnitinClient(TestCase):
         """
         current_datetime = "2023-11-21T16:00:00Z"
         mock_get_current_datetime.return_value = current_datetime
+        mock_resolve_version.return_value = "v1beta"
         expected_response = Mock(status_code=status.HTTP_201_CREATED)
         mock_post_create.return_value = expected_response
         expected_payload = {
@@ -258,6 +260,11 @@ class TestTurnitinClient(TestCase):
             "owner_default_permission_set": "LEARNER",
             "submitter_default_permission_set": "LEARNER",
             "extract_text_only": False,
+            "eula": {
+                "accepted_timestamp": current_datetime,
+                "language": "en-US",
+                "version": "v1beta",
+            },
             "metadata": {
                 "group": None,
                 "group_context": None,
@@ -284,10 +291,11 @@ class TestTurnitinClient(TestCase):
         mock_post_create.assert_called_once_with(expected_payload)
         self.assertEqual(result, expected_response)
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
     @patch(f"{VIEWS_MODULE_PATH}.post_create_submission")
     def test_create_turnitin_submission_object_with_group(
-        self, mock_post_create: Mock, mock_get_current_datetime: Mock
+        self, mock_post_create: Mock, mock_get_current_datetime: Mock, mock_resolve_version: Mock
     ):
         """
         Test the `create_turnitin_submission_object` method sends `group`/`group_context` when provided.
@@ -297,6 +305,7 @@ class TestTurnitinClient(TestCase):
                 the `TurnitinClient` was constructed with.
         """
         mock_get_current_datetime.return_value = "2023-11-21T16:00:00Z"
+        mock_resolve_version.return_value = "v1beta"
         mock_post_create.return_value = Mock(status_code=status.HTTP_201_CREATED)
         block_id = "block-v1:edX+DemoX+Demo_Course+type@openassessment+block@abc123"
         course_id = "course-v1:edX+DemoX+Demo_Course"
@@ -308,11 +317,12 @@ class TestTurnitinClient(TestCase):
         self.assertEqual(metadata["group"], block_id)
         self.assertEqual(metadata["group_context"], course_id)
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.sleep")
     @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
     @patch(f"{VIEWS_MODULE_PATH}.post_create_submission")
     def test_create_turnitin_submission_object_persistent_failure(
-        self, mock_post_create: Mock, mock_get_current_datetime: Mock, mock_sleep: Mock
+        self, mock_post_create: Mock, mock_get_current_datetime: Mock, mock_sleep: Mock, mock_resolve_version: Mock
     ):
         """
         Test the `create_turnitin_submission_object` method with a persistent failure.
@@ -322,6 +332,7 @@ class TestTurnitinClient(TestCase):
             - The last (failing) response is returned.
         """
         mock_get_current_datetime.return_value = "2023-11-21T16:00:00Z"
+        mock_resolve_version.return_value = "v1beta"
         failed_response = Mock(status_code=status.HTTP_400_BAD_REQUEST)
         mock_post_create.return_value = failed_response
 
@@ -331,11 +342,12 @@ class TestTurnitinClient(TestCase):
         self.assertEqual(mock_sleep.call_count, SUBMISSION_RETRY_ATTEMPTS - 1)
         self.assertEqual(result, failed_response)
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.sleep")
     @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
     @patch(f"{VIEWS_MODULE_PATH}.post_create_submission")
     def test_create_turnitin_submission_object_recovers_after_retry(
-        self, mock_post_create: Mock, mock_get_current_datetime: Mock, mock_sleep: Mock
+        self, mock_post_create: Mock, mock_get_current_datetime: Mock, mock_sleep: Mock, mock_resolve_version: Mock
     ):
         """
         Test the `create_turnitin_submission_object` method recovers after a transient failure.
@@ -345,6 +357,7 @@ class TestTurnitinClient(TestCase):
             - The successful response is returned.
         """
         mock_get_current_datetime.return_value = "2023-11-21T16:00:00Z"
+        mock_resolve_version.return_value = "v1beta"
         failed_response = Mock(status_code=status.HTTP_400_BAD_REQUEST)
         success_response = Mock(status_code=status.HTTP_201_CREATED)
         mock_post_create.side_effect = [failed_response, success_response]

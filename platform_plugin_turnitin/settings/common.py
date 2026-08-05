@@ -45,6 +45,10 @@ def plugin_settings(settings):
         f"turnitin-openedx-platform-plugin {__version__}"
     )
     settings.TURNITIN_TCA_API_KEY = None
+    # Whether this Turnitin tenant requires EULA display/acceptance (see Turnitin's
+    # "Get Features Enabled" tenant.require_eula attribute). Defaults to True; set to False only
+    # if your tenant is confirmed not to require it.
+    settings.TURNITIN_TCA_REQUIRE_EULA = True
     settings.TURNITIN_SIMILARITY_REPORT_PAYLOAD = {
         "indexing_settings": {"add_to_index": True},
         "generation_settings": {
