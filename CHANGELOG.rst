@@ -16,6 +16,15 @@ Unreleased
 
 *
 
+0.3.1 - 2026-08-05
+**********************************************
+
+Fixed
+=====
+
+* Default ``TURNITIN_TCA_INTEGRATION_FAMILY`` to ``"Open edX"`` instead of ``None``, so the
+  ``X-Turnitin-Integration-Name`` header is meaningful out of the box.
+
 0.3.0 - 2024-05-09
 **********************************************
 

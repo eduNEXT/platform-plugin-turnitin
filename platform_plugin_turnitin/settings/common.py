@@ -40,7 +40,7 @@ def plugin_settings(settings):
     settings.ENABLE_TURNITIN_SUBMISSION = False
     # Configuration variables
     settings.TURNITIN_TII_API_URL = None
-    settings.TURNITIN_TCA_INTEGRATION_FAMILY = None
+    settings.TURNITIN_TCA_INTEGRATION_FAMILY = "Open edX"
     settings.TURNITIN_TCA_INTEGRATION_VERSION = None
     settings.TURNITIN_TCA_API_KEY = None
     settings.TURNITIN_SIMILARITY_REPORT_PAYLOAD = {
