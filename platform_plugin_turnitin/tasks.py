@@ -14,12 +14,12 @@ from rest_framework.response import Response
 
 from platform_plugin_turnitin.api.v1.views import TurnitinClient
 from platform_plugin_turnitin.constants import (
-    ALLOWED_FILE_EXTENSIONS,
     MAX_REQUEST_RETRIES,
     REQUEST_TIMEOUT,
     SECONDS_TO_WAIT_BETWEEN_RETRIES,
 )
 from platform_plugin_turnitin.edxapp_wrapper import user_by_anonymous_id
+from platform_plugin_turnitin.utils import is_allowed_file_extension
 
 log = getLogger(__name__)
 
@@ -83,9 +83,7 @@ def send_uploaded_files_to_turnitin(
     base_url = getattr(settings, "LMS_ROOT_URL", "")
 
     for file_name, file_url in zip(file_names, file_urls):
-        file_extension = file_name.split(".")[-1]
-
-        if file_extension in ALLOWED_FILE_EXTENSIONS:
+        if is_allowed_file_extension(file_name):
             file_link = urljoin(base_url, file_url)
             response = requests.get(file_link, timeout=REQUEST_TIMEOUT)
 

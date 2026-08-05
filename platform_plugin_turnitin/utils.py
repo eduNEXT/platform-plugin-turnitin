@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from opaque_keys.edx.keys import UsageKey
 
+from platform_plugin_turnitin.constants import ALLOWED_FILE_EXTENSIONS
 from platform_plugin_turnitin.edxapp_wrapper.modulestore import modulestore
 
 
@@ -19,6 +20,19 @@ def get_current_datetime() -> str:
         str: The current datetime in ISO 8601 format.
     """
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def is_allowed_file_extension(filename: str) -> bool:
+    """
+    Check whether a filename's extension is one Turnitin is allowed to receive.
+
+    Args:
+        filename (str): The filename to check.
+
+    Returns:
+        bool: True if the file's extension is in ALLOWED_FILE_EXTENSIONS, False otherwise.
+    """
+    return filename.split(".")[-1] in ALLOWED_FILE_EXTENSIONS
 
 
 def enabled_in_course(block_id: str) -> bool:

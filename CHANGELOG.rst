@@ -48,6 +48,10 @@ Fixed
 * Normalise the user ID to a string (``str(self.user.id)``) everywhere it's sent to Turnitin —
   ``owner``, ``submitter``, ``metadata.owners[].id``, ``metadata.submitter.id``, and
   ``viewer_user_id`` — to match the EULA acceptance payload, which already sent it as a string.
+* Enforce ``ALLOWED_FILE_EXTENSIONS`` on the direct ``upload-file`` REST endpoint, which
+  previously accepted any file and relied on Turnitin rejecting it with ``UNSUPPORTED_FILETYPE``.
+  The check is now shared (``is_allowed_file_extension`` in ``utils.py``) between this endpoint
+  and the Celery/ORA event path, which enforced it already.
 
 0.3.0 - 2024-05-09
 **********************************************

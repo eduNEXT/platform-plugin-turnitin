@@ -13,7 +13,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from platform_plugin_turnitin.api.utils import api_error, get_fullname, validate_request
+from platform_plugin_turnitin.api.utils import api_error, api_field_errors, get_fullname, validate_request
 from platform_plugin_turnitin.edxapp_wrapper import BearerAuthenticationAllowInactiveUser
 from platform_plugin_turnitin.models import TurnitinSubmission
 from platform_plugin_turnitin.turnitin_client.handlers import (
@@ -25,7 +25,7 @@ from platform_plugin_turnitin.turnitin_client.handlers import (
     put_generate_similarity_report,
     put_upload_submission_file_content,
 )
-from platform_plugin_turnitin.utils import get_current_datetime
+from platform_plugin_turnitin.utils import get_current_datetime, is_allowed_file_extension
 
 log = getLogger(__name__)
 
@@ -46,7 +46,8 @@ class TurnitinUploadFileAPIView(GenericAPIView):
 
         * POST platform-plugin-turnitin/{course_id}/api/v1/upload-file/{ora_submission_id}
 
-            * 400: The supplied course_id key is not valid.
+            * 400: The supplied course_id key is not valid, or the uploaded file has an
+              unsupported extension.
 
             * 404: The course is not found.
 
@@ -68,7 +69,15 @@ class TurnitinUploadFileAPIView(GenericAPIView):
         if response := validate_request(request, course_id, only_course=True):
             return response
 
-        turnitin_client = TurnitinClient(request.user, request.FILES.get("file"))
+        uploaded_file = request.FILES.get("file")
+
+        if not uploaded_file or not is_allowed_file_extension(uploaded_file.name):
+            return api_field_errors(
+                {"file": "The uploaded file has an unsupported extension."},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        turnitin_client = TurnitinClient(request.user, uploaded_file)
         agreement_response = turnitin_client.accept_eula_agreement()
 
         if not agreement_response.ok:

@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.urls import reverse
 from rest_framework import status
@@ -110,9 +111,20 @@ class TurnitinUploadFileAPIViewTest(TurnitinAPITestMixin):
         super().setUp()
         self.view = TurnitinUploadFileAPIView.as_view()
 
-    def post_response(self) -> HttpResponse:
-        """Return the post response from the view."""
-        return self.response(self.view, "POST", "turnitin-api:v1:upload-file")
+    def post_response(self, file_name: str = "submission.pdf") -> HttpResponse:
+        """Return the post response from the view, uploading a file with the given name."""
+        url = reverse(
+            "turnitin-api:v1:upload-file",
+            kwargs={"ora_submission_id": self.ora_submission_id},
+        )
+        uploaded_file = SimpleUploadedFile(file_name, b"file content")
+        request = self.factory.post(url, data={"file": uploaded_file}, format="multipart")
+        force_authenticate(request, user=self.user)
+        return self.view(
+            request,
+            course_id=self.course_id,
+            ora_submission_id=self.ora_submission_id,
+        )
 
     @upload_turnitin_submission_patch
     @accept_eula_patch
@@ -173,6 +185,32 @@ class TurnitinUploadFileAPIViewTest(TurnitinAPITestMixin):
 
         self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result.data["error"], "EULA not accepted")
+
+    @course_instructor_role_patch
+    @course_staff_role_patch
+    @get_course_overview_patch
+    def test_upload_file_unsupported_extension(
+        self,
+        get_course_overview_mock: Mock,
+        course_staff_role_mock: Mock,
+        course_instructor_role_mock: Mock,
+    ):
+        """
+        Test the upload file view when the file has an unsupported extension.
+
+        Expected result: The response status code is 400.
+        """
+        get_course_overview_mock.return_value = self.course
+        course_staff_role_mock.return_value.has_user.return_value = True
+        course_instructor_role_mock.return_value.has_user.return_value = True
+
+        result = self.post_response(file_name="submission.exe")
+
+        self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            result.data["field_errors"]["file"],
+            "The uploaded file has an unsupported extension.",
+        )
 
     def test_upload_file_course_key_not_valid(self):
         """
