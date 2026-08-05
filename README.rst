@@ -272,7 +272,9 @@ settings in your LMS:
   TURNITIN_TII_API_URL = "<YOUR-API-URL>"
   TURNITIN_TCA_API_KEY = "<YOUR-API-KEY>"
   TURNITIN_TCA_INTEGRATION_FAMILY = "Open edX"  # optional, defaults to "Open edX"
-  TURNITIN_TCA_INTEGRATION_VERSION = "3.2.4"
+  # TURNITIN_TCA_INTEGRATION_VERSION is optional: it defaults to the RELEASE_LINE setting,
+  # falling back to "turnitin-openedx-platform-plugin <plugin-version>" if RELEASE_LINE is unset.
+  TURNITIN_TCA_INTEGRATION_VERSION = "redwood"
 
 
 Getting Help

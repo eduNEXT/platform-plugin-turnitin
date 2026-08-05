@@ -19,6 +19,8 @@ Fixed
 
 * Default ``TURNITIN_TCA_INTEGRATION_FAMILY`` to ``"Open edX"`` instead of ``None``, so the
   ``X-Turnitin-Integration-Name`` header is meaningful out of the box.
+* Default ``TURNITIN_TCA_INTEGRATION_VERSION`` to the ``RELEASE_LINE`` Django setting, falling
+  back to ``"turnitin-openedx-platform-plugin <plugin-version>"``, instead of ``None``.
 
 0.3.0 - 2024-05-09
 **********************************************
