@@ -14,6 +14,17 @@ Change Log
 Unreleased
 **********
 
+Documentation
+=============
+
+* Add an "EULA Display and Acceptance" section to the README explaining what the plugin
+  currently does (a static notice, auto-accepted on the learner's behalf), why the full
+  documented Turnitin EULA workflow requires care given this plugin doesn't own the ORA
+  submission page, and that the Open edX Filter it already uses is a stock, unmodified
+  ``edx-ora2`` extension point — not a patch — capable of rendering the actual EULA content
+  and a real consent checkbox without forking ``edx-ora2``. Deploying this plugin means the
+  operator is responsible for complying with Turnitin's EULA display requirements.
+
 Added
 =====
 

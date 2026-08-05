@@ -21,9 +21,13 @@ Government - 2024.
 
 **NOTE**: This plugin only includes the API to interact with Turnitin. All
 frontend changes that are related to displaying the similarity reports to
-instructors are included in the `ORA Grading MFE`_.
+instructors are included in the `ORA Grading MFE`_. Displaying and capturing
+acceptance of Turnitin's EULA for learners has its own set of constraints and
+responsibilities — see `EULA Display and Acceptance`_ before going to
+production.
 
 .. _ORA Grading MFE: https://github.com/eduNEXT/frontend-app-ora-grading/pull/4
+.. _EULA Display and Acceptance: #eula-display-and-acceptance
 
 Compatibility Notes
 ===================
@@ -275,6 +279,72 @@ settings in your LMS:
   # TURNITIN_TCA_INTEGRATION_VERSION is optional: it defaults to the RELEASE_LINE setting,
   # falling back to "turnitin-openedx-platform-plugin <plugin-version>" if RELEASE_LINE is unset.
   TURNITIN_TCA_INTEGRATION_VERSION = "redwood"
+
+
+EULA Display and Acceptance
+****************************
+
+**Read this before going to production.** Using this plugin means your
+deployment sends learner submissions to Turnitin, and Turnitin's own terms
+require that learners be shown its End User License Agreement (EULA) and
+asked to accept it before their work is sent. Satisfying that requirement is
+the responsibility of whoever deploys this plugin — the plugin cannot
+guarantee it on your behalf, for the architectural reason explained below.
+
+What this plugin does today
+============================
+
+This is a **backend-only** plugin: it exposes an API to talk to Turnitin, but
+it does not own the page where a learner submits their ORA response — that
+page is rendered by `edx-ora2`_, a separate, independently-versioned
+component of the Open edX platform.
+
+At submission time, the ``ORASubmissionViewTurnitinWarning`` filter
+(configured above) adds a static notice next to the "Submit" button: a
+sentence stating the work will be sent to Turnitin, with a link to Turnitin's
+EULA, and a statement that submitting the response constitutes acceptance.
+The backend then calls Turnitin's ``POST /eula/{version}/accept`` on the
+learner's behalf at upload time, unconditionally.
+
+This is a minimal, defensible starting point, but it is **not** Turnitin's
+documented EULA workflow (fetch the current version, render it, capture
+explicit acceptance, *then* call the accept endpoint). If you're presenting
+this integration for certification or a compliance review, say so plainly
+rather than letting it be discovered.
+
+Why this isn't a simple fix, and what actually is achievable
+==============================================================
+
+Showing the learner the *actual* EULA text and capturing a real, explicit
+acceptance has to happen on the ORA submission page — which is
+``edx-ora2`` code, not this plugin's. That could mean a maintained fork or
+patch of ``edx-ora2`` is needed for some approaches.
+
+There's a narrower path, though: the Open edX Filter this plugin already uses
+(``org.openedx.learning.ora.submission_view.render.started.v1``) is a
+**stock, unmodified extension point already present in upstream edx-ora2**,
+not a patch. It hands the filter pipeline full control over the entire
+submission-step template *and* its rendering context, evaluated as Python
+before any HTML is generated. In principle, this plugin's filter step could
+fetch the live EULA text from Turnitin and render it inline, and add a
+required checkbox — all without forking or patching ``edx-ora2``.
+
+A checkbox enforced only in the browser isn't real consent capture, though —
+it can be bypassed. Making it real means the backend has to stop assuming
+acceptance and instead require an explicit signal before it proceeds, for
+example:
+
+- The submission-page JS calls a dedicated acceptance endpoint before the
+  real upload is allowed to start, or
+- The backend checks Turnitin's own "check prior acceptance" endpoint
+  (``GET /eula/v1beta/accept/{user_id}``, already wrapped in
+  ``turnitin_client/handlers/eula.py`` as ``get_eula_acceptance_by_user`` but
+  currently unused) before calling ``accept_eula_agreement`` itself.
+
+None of this is implemented yet. See ``CHANGELOG.rst`` and the project's
+issue tracker for current status.
+
+.. _edx-ora2: https://github.com/openedx/edx-ora2
 
 
 Getting Help
