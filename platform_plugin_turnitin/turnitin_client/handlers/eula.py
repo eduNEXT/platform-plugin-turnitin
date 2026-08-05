@@ -19,7 +19,7 @@ def get_eula_page(version: str = "v1beta", language: str = "en-US"):
     """
     Returns the HTML content for a specified EULA version.
     """
-    response = turnitin_api_handler("get", f"/eula/{version}/view?lang={language}")
+    response = turnitin_api_handler("get", f"eula/{version}/view?lang={language}")
     return response
 
 

@@ -43,6 +43,8 @@ Fixed
   Create Submission payload. In the ORA flow the learner is both owner and submitter, so
   granting an instructor permission set to the submitter role was inconsistent with who was
   actually being granted it.
+* Remove the leading slash in ``get_eula_page()``'s URL prefix, which produced a double slash
+  when concatenated with ``turnitin_api_handler()``'s base URL.
 
 0.3.0 - 2024-05-09
 **********************************************
