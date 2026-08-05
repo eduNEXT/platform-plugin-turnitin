@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from logging import getLogger
+from time import sleep
 
 from django.conf import settings
 from django.db.models.query import QuerySet
@@ -14,6 +15,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from platform_plugin_turnitin.api.utils import api_error, api_field_errors, get_fullname, validate_request
+from platform_plugin_turnitin.constants import SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES, SUBMISSION_RETRY_ATTEMPTS
 from platform_plugin_turnitin.edxapp_wrapper import BearerAuthenticationAllowInactiveUser
 from platform_plugin_turnitin.models import TurnitinSubmission
 from platform_plugin_turnitin.turnitin_client.handlers import (
@@ -390,7 +392,16 @@ class TurnitinClient:
                 "original_submitted_time": get_current_datetime(),
             },
         }
-        return post_create_submission(payload)
+        response = post_create_submission(payload)
+
+        for attempt in range(1, SUBMISSION_RETRY_ATTEMPTS):
+            if response.status_code == status.HTTP_201_CREATED:
+                break
+            log.info(f"Retrying Turnitin submission creation for user [{self.user.id}] (attempt {attempt}).")
+            sleep(SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES)
+            response = post_create_submission(payload)
+
+        return response
 
     def get_submission_status(self, ora_submission_id: str) -> Response:
         """

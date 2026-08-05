@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from platform_plugin_turnitin.api.v1.views import TurnitinClient
 
 VIEWS_MODULE_PATH = "platform_plugin_turnitin.api.v1.views"
+SUBMISSION_RETRY_ATTEMPTS = 3
 
 
 class TestTurnitinClient(TestCase):
@@ -173,6 +174,53 @@ class TestTurnitinClient(TestCase):
 
         mock_post_create.assert_called_once_with(expected_payload)
         self.assertEqual(result, expected_response)
+
+    @patch(f"{VIEWS_MODULE_PATH}.sleep")
+    @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
+    @patch(f"{VIEWS_MODULE_PATH}.post_create_submission")
+    def test_create_turnitin_submission_object_persistent_failure(
+        self, mock_post_create: Mock, mock_get_current_datetime: Mock, mock_sleep: Mock
+    ):
+        """
+        Test the `create_turnitin_submission_object` method with a persistent failure.
+
+        Expected result:
+            - `post_create_submission` is retried `SUBMISSION_RETRY_ATTEMPTS` times.
+            - The last (failing) response is returned.
+        """
+        mock_get_current_datetime.return_value = "2023-11-21T16:00:00Z"
+        failed_response = Mock(status_code=status.HTTP_400_BAD_REQUEST)
+        mock_post_create.return_value = failed_response
+
+        result = self.turnitin_client.create_turnitin_submission_object()
+
+        self.assertEqual(mock_post_create.call_count, SUBMISSION_RETRY_ATTEMPTS)
+        self.assertEqual(mock_sleep.call_count, SUBMISSION_RETRY_ATTEMPTS - 1)
+        self.assertEqual(result, failed_response)
+
+    @patch(f"{VIEWS_MODULE_PATH}.sleep")
+    @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
+    @patch(f"{VIEWS_MODULE_PATH}.post_create_submission")
+    def test_create_turnitin_submission_object_recovers_after_retry(
+        self, mock_post_create: Mock, mock_get_current_datetime: Mock, mock_sleep: Mock
+    ):
+        """
+        Test the `create_turnitin_submission_object` method recovers after a transient failure.
+
+        Expected result:
+            - `post_create_submission` is called again after a failed attempt.
+            - The successful response is returned.
+        """
+        mock_get_current_datetime.return_value = "2023-11-21T16:00:00Z"
+        failed_response = Mock(status_code=status.HTTP_400_BAD_REQUEST)
+        success_response = Mock(status_code=status.HTTP_201_CREATED)
+        mock_post_create.side_effect = [failed_response, success_response]
+
+        result = self.turnitin_client.create_turnitin_submission_object()
+
+        self.assertEqual(mock_post_create.call_count, 2)
+        mock_sleep.assert_called_once()
+        self.assertEqual(result, success_response)
 
     @patch(f"{VIEWS_MODULE_PATH}.get_submission_info")
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.get_submissions")
