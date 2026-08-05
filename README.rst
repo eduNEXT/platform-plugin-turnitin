@@ -316,29 +316,34 @@ control over the entire submission-step template and its rendering context,
 which is enough to add real consent capture without touching ``edx-ora2``
 itself. Concretely:
 
-- The filter injects a notice next to the "Submit" button (a link to
-  Turnitin's EULA) alongside a required checkbox. The "Submit" button starts
-  disabled.
+- The filter resolves Turnitin's current EULA version (``GET /eula/latest``)
+  and fetches its actual content (``GET /eula/{version}/view``), rendering it
+  inline in the submission page next to a required checkbox. The "Submit"
+  button starts disabled. If either call fails, the page falls back to
+  linking out to Turnitin's EULA instead — a Turnitin outage never breaks the
+  ORA page.
 - Checking the box calls this plugin's own ``accept-eula`` endpoint
   (``POST .../api/v1/accept-eula/``), which records the learner's acceptance
-  with Turnitin via ``POST /eula/{version}/accept``. Only on success is the
-  "Submit" button enabled.
+  with Turnitin via ``POST /eula/{version}/accept``, using that same
+  dynamically-resolved version. Only on success is the "Submit" button
+  enabled.
 - The backend **no longer accepts the EULA on the learner's behalf**. Both
   upload paths (the direct REST endpoint and the Celery/ORA event path) check
   Turnitin's own "check prior acceptance" record
-  (``GET /eula/v1beta/accept/{user_id}``, via ``has_accepted_eula()``) before
-  proceeding, and refuse with ``451 Unavailable For Legal Reasons`` if there's
-  no record of acceptance for that learner.
+  (``GET /eula/{version}/accept/{user_id}``, via ``has_accepted_eula()``)
+  before proceeding, and refuse with ``451 Unavailable For Legal Reasons`` if
+  there's no record of acceptance for that learner.
 
-What this is **not** yet: the full documented workflow also calls for
-fetching and rendering the actual EULA *content* inline (``GET
-/eula/{version}/view``) rather than linking out to it, and for using
-``GET /eula/latest`` rather than a hardcoded EULA version. Those handlers
-exist in ``turnitin_client/handlers/eula.py`` already; wiring them in is the
-next step, using the same filter mechanism described above. If you're
+**Trade-off worth knowing:** rendering the EULA inline means the filter makes
+1-2 synchronous outbound calls to Turnitin on every Turnitin-enabled ORA page
+render. Each is bounded by ``TURNITIN_API_TIMEOUT`` and degrades gracefully,
+but a slow Turnitin still means a slower page for every learner. Also note
+that the exact response shape of ``GET /eula/latest`` (assumed to carry the
+version under a ``"version"`` key, in ``resolve_current_eula_version()`` in
+``utils.py``) is inferred from the documented workflow, not confirmed against
+Turnitin's response schema — worth validating against their docs. If you're
 presenting this integration for certification or a compliance review, be
-upfront about exactly this state — real consent capture, static EULA text
-display — rather than letting it be discovered.
+upfront about exactly this state rather than letting it be discovered.
 
 .. _edx-ora2: https://github.com/openedx/edx-ora2
 

@@ -4,9 +4,11 @@ from datetime import datetime, timezone
 
 from django.utils import translation
 from opaque_keys.edx.keys import UsageKey
+from requests.exceptions import RequestException
 
 from platform_plugin_turnitin.constants import ALLOWED_FILE_EXTENSIONS
 from platform_plugin_turnitin.edxapp_wrapper.modulestore import modulestore
+from platform_plugin_turnitin.turnitin_client.handlers import get_eula_version_info
 
 
 def get_current_datetime() -> str:
@@ -52,6 +54,34 @@ def get_turnitin_locale() -> str:
     if language.split("-")[0].lower() == "es":
         return "es-ES"
     return "en-US"
+
+
+def resolve_current_eula_version() -> str:
+    """
+    Resolve Turnitin's current EULA version via `GET /eula/latest`.
+
+    Falls back to `"v1beta"` (the previous hardcoded value) if the lookup fails, so a transient
+    issue here doesn't block EULA display or acceptance outright.
+
+    The response is assumed to carry the version identifier under a top-level `"version"` key —
+    this isn't confirmed against Turnitin's documented response schema, only inferred from the
+    documented `GET /eula/latest` best-practice workflow.
+
+    Returns:
+        str: The current EULA version identifier.
+    """
+    try:
+        response = get_eula_version_info()
+    except RequestException:
+        return "v1beta"
+
+    if response.ok:
+        try:
+            return response.json()["version"]
+        except (ValueError, KeyError):
+            pass
+
+    return "v1beta"
 
 
 def enabled_in_course(block_id: str) -> bool:

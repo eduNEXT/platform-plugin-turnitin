@@ -28,20 +28,22 @@ class TestTurnitinClient(TestCase):
         self.ora_submission_id = "test-ora-submission-id"
         self.turnitin_submission_id = "test-turnitin-submission-id"
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
     @patch(f"{VIEWS_MODULE_PATH}.post_accept_eula_version")
     def test_accept_eula_agreement(
-        self, mock_post_accept: Mock, mock_get_current_datetime: Mock
+        self, mock_post_accept: Mock, mock_get_current_datetime: Mock, mock_resolve_version: Mock
     ):
         """
         Test the `accept_eula_agreement` method.
 
         Expected result:
-            - `post_accept_eula_version` function is called with the correct payload
+            - `post_accept_eula_version` function is called with the correct payload and version
             - `accept_eula_agreement` method returns the correct response.
         """
         current_datetime = "2023-11-21T15:30:00Z"
         mock_get_current_datetime.return_value = current_datetime
+        mock_resolve_version.return_value = "v1beta"
         expected_payload = {
             "user_id": str(self.user.id),
             "accepted_timestamp": current_datetime,
@@ -52,13 +54,14 @@ class TestTurnitinClient(TestCase):
 
         result = self.turnitin_client.accept_eula_agreement()
 
-        mock_post_accept.assert_called_once_with(expected_payload)
+        mock_post_accept.assert_called_once_with(expected_payload, version="v1beta")
         self.assertEqual(result, expected_response)
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
     @patch(f"{VIEWS_MODULE_PATH}.post_accept_eula_version")
     def test_accept_eula_agreement_spanish_locale(
-        self, mock_post_accept: Mock, mock_get_current_datetime: Mock
+        self, mock_post_accept: Mock, mock_get_current_datetime: Mock, mock_resolve_version: Mock
     ):
         """
         Test the `accept_eula_agreement` method sends "es-ES" when Spanish is the active language.
@@ -67,6 +70,7 @@ class TestTurnitinClient(TestCase):
             - `post_accept_eula_version` function is called with `"language": "es-ES"`.
         """
         mock_get_current_datetime.return_value = "2023-11-21T15:30:00Z"
+        mock_resolve_version.return_value = "v1beta"
 
         with translation.override("es"):
             self.turnitin_client.accept_eula_agreement()
@@ -175,24 +179,27 @@ class TestTurnitinClient(TestCase):
         mock_create_turnitin_submission.assert_not_called()
         self.assertEqual(result.status_code, status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS)
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.get_eula_acceptance_by_user")
-    def test_has_accepted_eula_true(self, mock_get_eula_acceptance: Mock):
+    def test_has_accepted_eula_true(self, mock_get_eula_acceptance: Mock, mock_resolve_version: Mock):
         """
         Test the `has_accepted_eula` method when Turnitin confirms acceptance.
 
         Expected result: The method returns True.
         """
+        mock_resolve_version.return_value = "v1beta"
         mock_get_eula_acceptance.return_value = Mock(ok=True)
 
         result = self.turnitin_client.has_accepted_eula()
 
         self.assertTrue(result)
-        mock_get_eula_acceptance.assert_called_once_with(str(self.user.id))
+        mock_get_eula_acceptance.assert_called_once_with(str(self.user.id), version="v1beta")
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.sleep")
     @patch(f"{VIEWS_MODULE_PATH}.get_eula_acceptance_by_user")
     def test_has_accepted_eula_persistent_failure(
-        self, mock_get_eula_acceptance: Mock, mock_sleep: Mock
+        self, mock_get_eula_acceptance: Mock, mock_sleep: Mock, mock_resolve_version: Mock
     ):
         """
         Test the `has_accepted_eula` method when Turnitin never confirms acceptance.
@@ -200,6 +207,7 @@ class TestTurnitinClient(TestCase):
         Expected result:
             - The method returns False after retrying `SUBMISSION_RETRY_ATTEMPTS` times.
         """
+        mock_resolve_version.return_value = "v1beta"
         mock_get_eula_acceptance.return_value = Mock(ok=False)
 
         result = self.turnitin_client.has_accepted_eula()
@@ -208,16 +216,18 @@ class TestTurnitinClient(TestCase):
         self.assertEqual(mock_get_eula_acceptance.call_count, SUBMISSION_RETRY_ATTEMPTS)
         self.assertEqual(mock_sleep.call_count, SUBMISSION_RETRY_ATTEMPTS - 1)
 
+    @patch(f"{VIEWS_MODULE_PATH}.resolve_current_eula_version")
     @patch(f"{VIEWS_MODULE_PATH}.sleep")
     @patch(f"{VIEWS_MODULE_PATH}.get_eula_acceptance_by_user")
     def test_has_accepted_eula_recovers_after_retry(
-        self, mock_get_eula_acceptance: Mock, mock_sleep: Mock
+        self, mock_get_eula_acceptance: Mock, mock_sleep: Mock, mock_resolve_version: Mock
     ):
         """
         Test the `has_accepted_eula` method recovers after a transient check failure.
 
         Expected result: The method returns True once the check succeeds on retry.
         """
+        mock_resolve_version.return_value = "v1beta"
         mock_get_eula_acceptance.side_effect = [Mock(ok=False), Mock(ok=True)]
 
         result = self.turnitin_client.has_accepted_eula()

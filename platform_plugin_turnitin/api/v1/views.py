@@ -28,7 +28,12 @@ from platform_plugin_turnitin.turnitin_client.handlers import (
     put_generate_similarity_report,
     put_upload_submission_file_content,
 )
-from platform_plugin_turnitin.utils import get_current_datetime, get_turnitin_locale, is_allowed_file_extension
+from platform_plugin_turnitin.utils import (
+    get_current_datetime,
+    get_turnitin_locale,
+    is_allowed_file_extension,
+    resolve_current_eula_version,
+)
 
 log = getLogger(__name__)
 
@@ -373,7 +378,7 @@ class TurnitinClient:
 
     def accept_eula_agreement(self) -> RequestsResponse:
         """
-        Submit acceptance of the EULA for the current user.
+        Submit acceptance of the current EULA version for the current user.
 
         Returns:
             RequestsResponse: The response after accepting the EULA.
@@ -383,26 +388,27 @@ class TurnitinClient:
             "accepted_timestamp": get_current_datetime(),
             "language": get_turnitin_locale(),
         }
-        return post_accept_eula_version(payload)
+        return post_accept_eula_version(payload, version=resolve_current_eula_version())
 
     def has_accepted_eula(self) -> bool:
         """
-        Check whether Turnitin has a record of this user's EULA acceptance.
+        Check whether Turnitin has a record of this user's acceptance of the current EULA version.
 
         Retries a few times on failure before concluding the user has not accepted, since a
         network blip on the check itself shouldn't be treated the same as a real "not accepted".
 
         Returns:
-            bool: True if Turnitin confirms this user has accepted its EULA.
+            bool: True if Turnitin confirms this user has accepted its current EULA version.
         """
-        response = get_eula_acceptance_by_user(str(self.user.id))
+        version = resolve_current_eula_version()
+        response = get_eula_acceptance_by_user(str(self.user.id), version=version)
 
         for attempt in range(1, SUBMISSION_RETRY_ATTEMPTS):
             if response.ok:
                 break
             log.info(f"Retrying EULA acceptance check for user [{self.user.id}] (attempt {attempt}).")
             sleep(SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES)
-            response = get_eula_acceptance_by_user(str(self.user.id))
+            response = get_eula_acceptance_by_user(str(self.user.id), version=version)
 
         return response.ok
 

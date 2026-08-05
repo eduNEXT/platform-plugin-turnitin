@@ -327,10 +327,21 @@
                         <span class="icon fa fa-exclamation-triangle"></span>
                         {% blocktrans %}
                           The response text and files related to your response will be sent to Turnitin for a plagiarism check.
-                          Please read <a href="https://www.turnitin.com/agreement.asp" target="_blank">Turnitin's EULA</a>
-                          before submitting.
                         {% endblocktrans %}
                       </p>
+                      {% if turnitin_eula_content %}
+                        {# Turnitin's own EULA content, fetched from their API; rendered as-is. #}
+                        <div class="turnitin_eula__content" style="max-height: 12em; overflow-y: auto; border: 1px solid #ccc; padding: 0.5em; margin-bottom: 0.5em;">
+                          {{ turnitin_eula_content|safe }}
+                        </div>
+                      {% else %}
+                        <p>
+                          {% blocktrans %}
+                            Please read <a href="https://www.turnitin.com/agreement.asp" target="_blank">Turnitin's EULA</a>
+                            before submitting.
+                          {% endblocktrans %}
+                        </p>
+                      {% endif %}
                       <p class="turnitin_eula__error" id="turnitin_eula_error__{{ xblock_id }}" style="display: none;">
                         {% trans "We could not record your EULA acceptance. Please try again." %}
                       </p>

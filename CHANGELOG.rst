@@ -18,11 +18,11 @@ Documentation
 =============
 
 * Add an "EULA Display and Acceptance" section to the README explaining what the plugin does
-  (a required consent checkbox on the ORA submission page, backed by a real acceptance check —
-  see Changed, below), what it doesn't do yet (rendering the actual EULA text inline instead of
-  linking out to it), and that the Open edX Filter it uses is a stock, unmodified ``edx-ora2``
-  extension point, not a patch. Deploying this plugin means the operator is responsible for
-  complying with Turnitin's EULA display requirements.
+  (Turnitin's actual EULA text rendered inline, a required consent checkbox on the ORA
+  submission page, backed by a real acceptance check — see Changed, below) and that the Open
+  edX Filter it uses is a stock, unmodified ``edx-ora2`` extension point, not a patch. Deploying
+  this plugin means the operator is responsible for complying with Turnitin's EULA display
+  requirements.
 
 Changed
 =======
@@ -30,7 +30,7 @@ Changed
 * **Breaking:** stop accepting the Turnitin EULA on the learner's behalf. Both upload paths (the
   ``upload-file`` REST endpoint and the Celery/ORA event path) now call
   ``TurnitinClient.has_accepted_eula()`` — which checks Turnitin's own
-  ``GET /eula/v1beta/accept/{user_id}`` record via the previously-unused
+  ``GET /eula/{version}/accept/{user_id}`` record via the previously-unused
   ``get_eula_acceptance_by_user`` handler — before proceeding, and refuse with
   ``451 Unavailable For Legal Reasons`` if there's no record of acceptance. A new
   ``POST .../api/v1/accept-eula/`` endpoint lets the frontend record acceptance explicitly; the
@@ -38,6 +38,16 @@ Changed
   calls it before enabling the "Submit" button. Any caller integrating directly against the
   ``upload-file`` endpoint must call ``accept-eula`` first — this is intentionally a breaking
   change to close the compliance gap of assuming consent nobody explicitly gave.
+* Render Turnitin's actual EULA text inline on the ORA submission page instead of only linking
+  out to it, and resolve the EULA version dynamically via ``GET /eula/latest``
+  (``resolve_current_eula_version()`` in ``utils.py``) instead of hardcoding ``v1beta``, used
+  consistently for rendering, accepting, and checking acceptance. This means the filter step now
+  makes 1-2 additional synchronous outbound calls to Turnitin on every Turnitin-enabled ORA page
+  render; each is bounded by ``TURNITIN_API_TIMEOUT`` and fails gracefully (falls back to
+  linking out to the EULA) rather than breaking the page, but it's a real added-latency
+  tradeoff worth knowing about. The exact response shape of ``GET /eula/latest`` (assumed to
+  carry the version under a ``"version"`` key) is inferred, not confirmed against Turnitin's
+  documented schema.
 
 Added
 =====
