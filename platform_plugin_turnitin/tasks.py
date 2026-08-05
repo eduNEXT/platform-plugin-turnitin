@@ -17,6 +17,8 @@ from platform_plugin_turnitin.constants import (
     MAX_REQUEST_RETRIES,
     REQUEST_TIMEOUT,
     SECONDS_TO_WAIT_BETWEEN_RETRIES,
+    SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES,
+    SUBMISSION_RETRY_ATTEMPTS,
 )
 from platform_plugin_turnitin.edxapp_wrapper import user_by_anonymous_id
 from platform_plugin_turnitin.utils import is_allowed_file_extension
@@ -87,6 +89,13 @@ def send_uploaded_files_to_turnitin(
             file_link = urljoin(base_url, file_url)
             response = requests.get(file_link, timeout=REQUEST_TIMEOUT)
 
+            for attempt in range(1, SUBMISSION_RETRY_ATTEMPTS):
+                if response.ok:
+                    break
+                log.info(f"Retrying download of file [{file_name}] (attempt {attempt}).")
+                sleep(SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES)
+                response = requests.get(file_link, timeout=REQUEST_TIMEOUT)
+
             if response.ok:
                 send_file_to_turnitin(ora_submission_uuid, user, response.content, file_name)
             else:
@@ -129,6 +138,13 @@ def upload_turnitin_submission(ora_submission_uuid: str, user, file) -> None:
     turnitin_client = TurnitinClient(user, file)
 
     agreement_response = turnitin_client.accept_eula_agreement()
+
+    for attempt in range(1, SUBMISSION_RETRY_ATTEMPTS):
+        if agreement_response.ok:
+            break
+        log.info(f"Retrying EULA agreement acceptance for submission [{ora_submission_uuid}] (attempt {attempt}).")
+        sleep(SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES)
+        agreement_response = turnitin_client.accept_eula_agreement()
 
     if not agreement_response.ok:
         raise Exception("Failed to accept the EULA agreement.")

@@ -21,6 +21,7 @@ TASKS_MODULE_PATH = "platform_plugin_turnitin.tasks"
 
 MAX_REQUEST_RETRIES = 3
 SECONDS_TO_WAIT_BETWEEN_RETRIES = 1
+SUBMISSION_RETRY_ATTEMPTS = 3
 
 
 class TestOraSubmissionCreatedTask(TestCase):
@@ -171,16 +172,18 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_send_file_to_turnitin.assert_has_calls(calls)
         self.assertEqual(mock_send_file_to_turnitin.call_count, 2)
 
+    @patch(f"{TASKS_MODULE_PATH}.sleep")
     @patch(f"{TASKS_MODULE_PATH}.requests.get")
     @patch(f"{TASKS_MODULE_PATH}.send_file_to_turnitin")
     def test_send_uploaded_files_to_turnitin_failure_to_download(
-        self, mock_send_file_to_turnitin: Mock, mock_get: Mock
+        self, mock_send_file_to_turnitin: Mock, mock_get: Mock, mock_sleep: Mock
     ):
         """
-        Test the `send_uploaded_files_to_turnitin` function with a failure to download a file.
+        Test the `send_uploaded_files_to_turnitin` function with a persistent failure to download a file.
 
         Expected result:
-            - An exception is raised with the correct message.
+            - An exception is raised with the correct message after exhausting retries.
+            - `requests.get` is retried `SUBMISSION_RETRY_ATTEMPTS` times.
             - `send_file_to_turnitin` function is not called.
         """
         file_link = "/download/file1.txt"
@@ -194,6 +197,32 @@ class TestOraSubmissionCreatedTask(TestCase):
 
         mock_send_file_to_turnitin.assert_not_called()
         self.assertEqual(exception_message, str(context.exception))
+        self.assertEqual(mock_get.call_count, SUBMISSION_RETRY_ATTEMPTS)
+        self.assertEqual(mock_sleep.call_count, SUBMISSION_RETRY_ATTEMPTS - 1)
+
+    @patch(f"{TASKS_MODULE_PATH}.sleep")
+    @patch(f"{TASKS_MODULE_PATH}.requests.get")
+    @patch(f"{TASKS_MODULE_PATH}.send_file_to_turnitin")
+    def test_send_uploaded_files_to_turnitin_recovers_after_retry(
+        self, mock_send_file_to_turnitin: Mock, mock_get: Mock, mock_sleep: Mock
+    ):
+        """
+        Test the `send_uploaded_files_to_turnitin` function recovers after a transient download failure.
+
+        Expected result:
+            - `send_file_to_turnitin` is called once the download succeeds on retry.
+        """
+        file_names = ["file1.txt"]
+        file_urls = ["/download/file1.txt"]
+        mock_get.side_effect = [Mock(ok=False), Mock(ok=True, content=b"file content")]
+
+        send_uploaded_files_to_turnitin(self.submission_uuid, self.user, file_names, file_urls)
+
+        mock_send_file_to_turnitin.assert_called_once_with(
+            self.submission_uuid, self.user, b"file content", "file1.txt"
+        )
+        self.assertEqual(mock_get.call_count, 2)
+        mock_sleep.assert_called_once()
 
     @patch(f"{TASKS_MODULE_PATH}.tempfile.NamedTemporaryFile")
     @patch(f"{TASKS_MODULE_PATH}.upload_turnitin_submission")
@@ -237,15 +266,16 @@ class TestOraSubmissionCreatedTask(TestCase):
         mock_turnitin_client_instance.accept_eula_agreement.assert_called_once()
         mock_turnitin_client_instance.upload_turnitin_submission_file.assert_called_once_with(self.submission_uuid)
 
+    @patch(f"{TASKS_MODULE_PATH}.sleep")
     @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
-    def test_upload_turnitin_submission_eula_failure(self, mock_turnitin_client: Mock):
+    def test_upload_turnitin_submission_eula_failure(self, mock_turnitin_client: Mock, mock_sleep: Mock):
         """
-        Test the `upload_turnitin_submission` function with a failure to accept the EULA agreement.
+        Test the `upload_turnitin_submission` function with a persistent failure to accept the EULA agreement.
 
         Expected result:
-            - An exception is raised with the correct message.
+            - An exception is raised with the correct message after exhausting retries.
             - `TurnitinClient` is called once with the user and file.
-            - `accept_eula_agreement` is called once.
+            - `accept_eula_agreement` is retried `SUBMISSION_RETRY_ATTEMPTS` times.
             - `upload_turnitin_submission_file` is not called.
         """
         mock_turnitin_client_instance = mock_turnitin_client.return_value
@@ -256,8 +286,27 @@ class TestOraSubmissionCreatedTask(TestCase):
 
         self.assertEqual("Failed to accept the EULA agreement.", str(context.exception))
         mock_turnitin_client.assert_called_once_with(self.user, self.file)
-        mock_turnitin_client_instance.accept_eula_agreement.assert_called_once()
+        self.assertEqual(mock_turnitin_client_instance.accept_eula_agreement.call_count, SUBMISSION_RETRY_ATTEMPTS)
+        self.assertEqual(mock_sleep.call_count, SUBMISSION_RETRY_ATTEMPTS - 1)
         mock_turnitin_client_instance.upload_turnitin_submission_file.assert_not_called()
+
+    @patch(f"{TASKS_MODULE_PATH}.sleep")
+    @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
+    def test_upload_turnitin_submission_recovers_after_retry(self, mock_turnitin_client: Mock, mock_sleep: Mock):
+        """
+        Test the `upload_turnitin_submission` function recovers after a transient EULA acceptance failure.
+
+        Expected result:
+            - `upload_turnitin_submission_file` is called once the EULA agreement is accepted on retry.
+        """
+        mock_turnitin_client_instance = mock_turnitin_client.return_value
+        mock_turnitin_client_instance.accept_eula_agreement.side_effect = [Mock(ok=False), Mock(ok=True)]
+
+        upload_turnitin_submission(self.submission_uuid, self.user, self.file)
+
+        self.assertEqual(mock_turnitin_client_instance.accept_eula_agreement.call_count, 2)
+        mock_sleep.assert_called_once()
+        mock_turnitin_client_instance.upload_turnitin_submission_file.assert_called_once_with(self.submission_uuid)
 
     @patch(f"{TASKS_MODULE_PATH}.get_submission_status")
     @patch(f"{TASKS_MODULE_PATH}.log.info")

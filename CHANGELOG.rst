@@ -14,6 +14,18 @@ Change Log
 Unreleased
 **********
 
+Added
+=====
+
+* Retry, with a short wait between attempts, the two points in ``tasks.py`` that previously
+  raised an unrecoverable exception on the first failure: downloading a learner's uploaded file
+  from the LMS, and accepting the Turnitin EULA on the learner's behalf. Both now retry up to
+  ``SUBMISSION_RETRY_ATTEMPTS`` times (default 3), waiting
+  ``SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES`` seconds (default 5) between attempts, so a
+  transient network blip no longer aborts the whole submission and requires a learner to
+  manually resubmit. This does not change the report-generation polling loop or add webhooks —
+  those remain roadmap items.
+
 Changed
 =======
 
