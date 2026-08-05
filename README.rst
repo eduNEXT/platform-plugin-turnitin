@@ -21,10 +21,9 @@ Government - 2024.
 
 **NOTE**: This plugin only includes the API to interact with Turnitin. All
 frontend changes that are related to displaying the similarity reports to
-instructors are included in the `ORA Grading MFE`_. Displaying and capturing
-acceptance of Turnitin's EULA for learners has its own set of constraints and
-responsibilities — see `EULA Display and Acceptance`_ before going to
-production.
+instructors are included in the `ORA Grading MFE`_. EULA display and
+acceptance for learners is implemented via an Open edX Filter on the ORA
+submission page — see `EULA Display and Acceptance`_ for how it works.
 
 .. _ORA Grading MFE: https://github.com/eduNEXT/frontend-app-ora-grading/pull/4
 .. _EULA Display and Acceptance: #eula-display-and-acceptance
@@ -40,6 +39,8 @@ Compatibility Notes
 | Quince           | >= 0.2.0     |
 +------------------+--------------+
 | Redwood          | >= 0.2.0     |
++------------------+--------------+
+| Verawood         | >= 1.0.0     |
 +------------------+--------------+
 
 The settings can be changed in ``platform_plugin_turnitin/settings/common.py``
@@ -264,8 +265,8 @@ Settings**:
     "ENABLE_TURNITIN_SUBMISSION": true
   }
 
-Next, you must include the following setting to enable the filter that will
-display the warning message to the learner about Turnitin:
+Next, you must include the following setting to enable the filter that
+displays the Turnitin notice and EULA to the learner:
 
 .. code-block:: python
 
@@ -290,60 +291,88 @@ settings in your LMS:
   # falling back to "turnitin-openedx-platform-plugin <plugin-version>" if RELEASE_LINE is unset.
   TURNITIN_TCA_INTEGRATION_VERSION = "redwood"
 
+Tutor plugin example
+=====================
+
+If you deploy with `Tutor <https://docs.tutor.edly.io/>`_, all of the above
+settings can be applied together as a single plugin. Save the following as,
+for example, ``turnitin-settings.yml`` in your Tutor plugins root
+(``tutor plugins printroot``), then enable it with
+``tutor plugins enable turnitin-settings``:
+
+.. code-block:: yaml
+
+  name: turnitin-settings
+  version: 0.1.0
+  patches:
+    openedx-lms-development-settings: |
+      ENABLE_TURNITIN_SUBMISSION = True
+      OPEN_EDX_FILTERS_CONFIG.update({
+          "org.openedx.learning.ora.submission_view.render.started.v1": {
+              "fail_silently": False,
+              "pipeline": [
+                  "platform_plugin_turnitin.extensions.filters.ORASubmissionViewTurnitinWarning",
+              ]
+          },
+      })
+      TURNITIN_TII_API_URL = "<YOUR-API-URL>"
+      TURNITIN_TCA_API_KEY = "<YOUR-API-KEY>"
+
+Note the ``.update()`` call on ``OPEN_EDX_FILTERS_CONFIG`` rather than a full
+reassignment — this keeps any filter pipelines other plugins have already
+registered on the same trigger intact. The example above patches
+``openedx-lms-development-settings``; apply the same block to the equivalent
+production patch for a production deployment.
+
 
 EULA Display and Acceptance
 ****************************
 
-**Read this before going to production.** Using this plugin means your
-deployment sends learner submissions to Turnitin, and Turnitin's own terms
-require that learners be shown its End User License Agreement (EULA) and
-asked to accept it before their work is sent. Satisfying that requirement is
-the responsibility of whoever deploys this plugin — the plugin cannot
-guarantee it on your behalf, for the architectural reason explained below.
+Turnitin's terms require that learners be shown its End User License
+Agreement (EULA) and give explicit consent before their work is sent. This
+plugin implements that workflow end to end, including live EULA content and
+a real, verified consent step — not a click-through assumption.
 
-What this plugin does today
+How it works
 ============================
 
 This is a **backend-only** plugin: it exposes an API to talk to Turnitin, but
 it does not own the page where a learner submits their ORA response — that
 page is rendered by `edx-ora2`_, a separate, independently-versioned
-component of the Open edX platform.
-
-The ``ORASubmissionViewTurnitinWarning`` filter (configured above) is a
-**stock, unmodified Open edX Filter extension point already present in
-upstream edx-ora2** — not a patch or fork. It hands the filter pipeline full
-control over the entire submission-step template and its rendering context,
-which is enough to add real consent capture without touching ``edx-ora2``
-itself. Concretely:
+component of the Open edX platform. The ``ORASubmissionViewTurnitinWarning``
+filter (configured above) is a **stock Open edX Filter extension point
+present in edx-ora2**, giving the filter pipeline full control over the
+entire submission-step template and its rendering context — enough to
+implement genuine consent capture with no changes to ``edx-ora2`` itself:
 
 - The filter resolves Turnitin's current EULA version (``GET /eula/latest``)
   and fetches its actual content (``GET /eula/{version}/view``), rendering it
   inline in the submission page next to a required checkbox. The "Submit"
-  button starts disabled. If either call fails, the page falls back to
-  linking out to Turnitin's EULA instead — a Turnitin outage never breaks the
-  ORA page.
+  button starts disabled until the learner reads and accepts the agreement.
+  If Turnitin is temporarily unreachable, the page falls back to linking out
+  to the EULA rather than failing to render.
 - Checking the box calls this plugin's own ``accept-eula`` endpoint
   (``POST .../api/v1/accept-eula/``), which records the learner's acceptance
   with Turnitin via ``POST /eula/{version}/accept``, using that same
-  dynamically-resolved version. Only on success is the "Submit" button
-  enabled.
-- The backend **no longer accepts the EULA on the learner's behalf**. Both
-  upload paths (the direct REST endpoint and the Celery/ORA event path) check
-  Turnitin's own "check prior acceptance" record
-  (``GET /eula/{version}/accept/{user_id}``, via ``has_accepted_eula()``)
-  before proceeding, and refuse with ``451 Unavailable For Legal Reasons`` if
-  there's no record of acceptance for that learner.
+  dynamically-resolved version. Only on success is "Submit" enabled.
+- The backend never assumes consent. Both upload paths (the direct REST
+  endpoint and the Celery/ORA event path) check Turnitin's own "check prior
+  acceptance" record (``GET /eula/{version}/accept/{user_id}``, via
+  ``has_accepted_eula()``) before proceeding, and refuse with
+  ``451 Unavailable For Legal Reasons`` if there's no record of acceptance
+  for that learner.
 
-**Trade-off worth knowing:** rendering the EULA inline means the filter makes
-1-2 synchronous outbound calls to Turnitin on every Turnitin-enabled ORA page
-render. Each is bounded by ``TURNITIN_API_TIMEOUT`` and degrades gracefully,
-but a slow Turnitin still means a slower page for every learner. Also note
-that the exact response shape of ``GET /eula/latest`` (assumed to carry the
-version under a ``"version"`` key, in ``resolve_current_eula_version()`` in
-``utils.py``) is inferred from the documented workflow, not confirmed against
-Turnitin's response schema — worth validating against their docs. If you're
-presenting this integration for certification or a compliance review, be
-upfront about exactly this state rather than letting it be discovered.
+Implementation notes
+============================
+
+Rendering the EULA inline means the filter makes one or two outbound calls
+to Turnitin on each Turnitin-enabled ORA page render. Each is bounded by
+``TURNITIN_API_TIMEOUT`` and handled gracefully on failure, so a slow or
+unavailable Turnitin degrades the notice rather than the page. The response
+shape of ``GET /eula/latest`` is read from a ``"version"`` key, inferred
+from Turnitin's documented workflow description — see
+``resolve_current_eula_version()`` in ``utils.py`` if you need to adapt it
+to a different schema.
 
 .. _edx-ora2: https://github.com/openedx/edx-ora2
 
