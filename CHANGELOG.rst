@@ -83,6 +83,15 @@ Fixed
   previously accepted any file and relied on Turnitin rejecting it with ``UNSUPPORTED_FILETYPE``.
   The check is now shared (``is_allowed_file_extension`` in ``utils.py``) between this endpoint
   and the Celery/ORA event path, which enforced it already.
+* Stop hardcoding ``"en-US"`` for the EULA acceptance ``language`` and the viewer launch
+  ``locale``. Both now derive from the active Django language (``get_turnitin_locale()`` in
+  ``utils.py``), sending ``"es-ES"`` for Spanish — matching the ``es_419``/``es_ES``
+  translations this plugin already ships. Only reflects the specific user's preference on the
+  direct REST endpoints, where Django's locale middleware has activated it for the request;
+  Celery tasks have no active request, so they fall back to the deployment's default
+  ``LANGUAGE_CODE`` — still an improvement for Spanish-only deployments, but not fully
+  per-learner yet. The ``es-ES`` mapping is a best-effort choice, not confirmed against
+  Turnitin's documented locale enum.
 
 0.3.0 - 2024-05-09
 **********************************************

@@ -27,7 +27,7 @@ from platform_plugin_turnitin.turnitin_client.handlers import (
     put_generate_similarity_report,
     put_upload_submission_file_content,
 )
-from platform_plugin_turnitin.utils import get_current_datetime, is_allowed_file_extension
+from platform_plugin_turnitin.utils import get_current_datetime, get_turnitin_locale, is_allowed_file_extension
 
 log = getLogger(__name__)
 
@@ -328,7 +328,7 @@ class TurnitinClient:
         payload = {
             "user_id": str(self.user.id),
             "accepted_timestamp": get_current_datetime(),
-            "language": "en-US",
+            "language": get_turnitin_locale(),
         }
         return post_accept_eula_version(payload)
 
@@ -493,7 +493,7 @@ class TurnitinClient:
 
         payload = {
             "viewer_user_id": str(self.user.id),
-            "locale": "en-US",
+            "locale": get_turnitin_locale(),
             "viewer_default_permission_set": "INSTRUCTOR",
             "viewer_permissions": {
                 "may_view_submission_full_source": False,

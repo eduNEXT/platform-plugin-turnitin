@@ -3,6 +3,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, call, patch
 
+from django.utils import translation
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -53,6 +54,24 @@ class TestTurnitinClient(TestCase):
 
         mock_post_accept.assert_called_once_with(expected_payload)
         self.assertEqual(result, expected_response)
+
+    @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
+    @patch(f"{VIEWS_MODULE_PATH}.post_accept_eula_version")
+    def test_accept_eula_agreement_spanish_locale(
+        self, mock_post_accept: Mock, mock_get_current_datetime: Mock
+    ):
+        """
+        Test the `accept_eula_agreement` method sends "es-ES" when Spanish is the active language.
+
+        Expected result:
+            - `post_accept_eula_version` function is called with `"language": "es-ES"`.
+        """
+        mock_get_current_datetime.return_value = "2023-11-21T15:30:00Z"
+
+        with translation.override("es"):
+            self.turnitin_client.accept_eula_agreement()
+
+        self.assertEqual(mock_post_accept.call_args.args[0]["language"], "es-ES")
 
     @patch(f"{VIEWS_MODULE_PATH}.put_upload_submission_file_content")
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinSubmission")
@@ -462,6 +481,25 @@ class TestTurnitinClient(TestCase):
                 {"url": "url2", "file_name": "file2"},
             ],
         )
+
+    @patch(f"{VIEWS_MODULE_PATH}.post_create_viewer_launch_url")
+    @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.get_submissions")
+    def test_create_similarity_viewer_spanish_locale(
+        self, mock_get_submissions: Mock, mock_post_create: Mock
+    ):
+        """
+        Test the `create_similarity_viewer` method sends "es-ES" when Spanish is the active language.
+
+        Expected result:
+            - `post_create_viewer_launch_url` function is called with `"locale": "es-ES"`.
+        """
+        mock_get_submissions.return_value = [Mock(turnitin_submission_id="id1", file_name="file1")]
+        mock_post_create.return_value = Mock(json=Mock(return_value={"viewer_url": "url1"}))
+
+        with translation.override("es"):
+            self.turnitin_client.create_similarity_viewer(self.ora_submission_id)
+
+        self.assertEqual(mock_post_create.call_args.args[1]["locale"], "es-ES")
 
     @patch(f"{VIEWS_MODULE_PATH}.post_create_viewer_launch_url")
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.get_submissions")

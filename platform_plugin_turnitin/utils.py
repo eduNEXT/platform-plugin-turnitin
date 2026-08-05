@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 
+from django.utils import translation
 from opaque_keys.edx.keys import UsageKey
 
 from platform_plugin_turnitin.constants import ALLOWED_FILE_EXTENSIONS
@@ -33,6 +34,24 @@ def is_allowed_file_extension(filename: str) -> bool:
         bool: True if the file's extension is in ALLOWED_FILE_EXTENSIONS, False otherwise.
     """
     return filename.split(".")[-1] in ALLOWED_FILE_EXTENSIONS
+
+
+def get_turnitin_locale() -> str:
+    """
+    Map the active Django language to a Turnitin-accepted locale string.
+
+    Reflects the requesting user's language on the direct REST endpoints, where Django's
+    locale middleware has already activated it for the request. Celery tasks have no active
+    request, so this falls back to the deployment's default ``LANGUAGE_CODE`` there — still an
+    improvement over a hardcoded locale on Spanish-only deployments.
+
+    Returns:
+        str: ``"es-ES"`` for any Spanish variant, ``"en-US"`` otherwise.
+    """
+    language = translation.get_language() or ""
+    if language.split("-")[0].lower() == "es":
+        return "es-ES"
+    return "en-US"
 
 
 def enabled_in_course(block_id: str) -> bool:
