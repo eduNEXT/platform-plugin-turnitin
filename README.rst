@@ -66,7 +66,7 @@ you might do that if you have ``virtualenv`` set up:
 
 .. code-block:: bash
 
-  virtualenv -p python3.8 platform_plugin_turnitin
+  virtualenv -p python3.12 platform_plugin_turnitin
 
 Every time you develop something in this repo
 ---------------------------------------------

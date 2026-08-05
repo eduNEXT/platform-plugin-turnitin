@@ -14,6 +14,13 @@ Change Log
 Unreleased
 **********
 
+Changed
+=======
+
+* Dropped support for Python 3.8 and Django 3.2/4.0; the plugin now targets Python 3.12 and
+  Django 5.2 exclusively. Requirements files were re-compiled under Python 3.12, and CI now
+  runs on Python 3.12 / Django 5.2 (``ubuntu-latest``) instead of the old 3.8 matrix.
+
 Fixed
 =====
 
