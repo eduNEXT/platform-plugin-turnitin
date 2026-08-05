@@ -469,7 +469,7 @@ class TurnitinClient:
 
         payload = {
             "viewer_user_id": self.user.id,
-            "locale": "en-EN",
+            "locale": "en-US",
             "viewer_default_permission_set": "INSTRUCTOR",
             "viewer_permissions": {
                 "may_view_submission_full_source": False,

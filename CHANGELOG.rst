@@ -32,6 +32,8 @@ Fixed
   upload branch. Non-upload calls (create submission, get info, generate report, viewer URL,
   EULA) previously had no timeout at all and could hang a Celery worker or web request
   indefinitely.
+* Fix invalid ``"locale": "en-EN"`` sent to the similarity report viewer launch payload; now
+  sends the valid ``"en-US"``.
 
 0.3.0 - 2024-05-09
 **********************************************
