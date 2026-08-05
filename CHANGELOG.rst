@@ -28,6 +28,10 @@ Fixed
   ``X-Turnitin-Integration-Name`` header is meaningful out of the box.
 * Default ``TURNITIN_TCA_INTEGRATION_VERSION`` to the ``RELEASE_LINE`` Django setting, falling
   back to ``"turnitin-openedx-platform-plugin <plugin-version>"``, instead of ``None``.
+* Apply ``TURNITIN_API_TIMEOUT`` to every ``turnitin_api_handler()`` request, not just the file
+  upload branch. Non-upload calls (create submission, get info, generate report, viewer URL,
+  EULA) previously had no timeout at all and could hang a Celery worker or web request
+  indefinitely.
 
 0.3.0 - 2024-05-09
 **********************************************

@@ -82,6 +82,7 @@ def turnitin_api_handler(
 
     args = {
         "headers": headers,
+        "timeout": settings.TURNITIN_API_TIMEOUT,
         (
             "json" if request_method.lower() in ["post", "put", "patch"] else "params"
         ): data,
