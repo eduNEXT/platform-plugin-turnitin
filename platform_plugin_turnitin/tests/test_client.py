@@ -148,7 +148,7 @@ class TestTurnitinClient(TestCase):
             "title": f"{self.file.name}-{self.user.username}",
             "submitter": self.user.id,
             "owner_default_permission_set": "LEARNER",
-            "submitter_default_permission_set": "INSTRUCTOR",
+            "submitter_default_permission_set": "LEARNER",
             "extract_text_only": False,
             "metadata": {
                 "owners": [

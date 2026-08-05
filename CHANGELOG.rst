@@ -39,6 +39,10 @@ Fixed
   learner-uploaded filenames with accented characters).
 * Fix invalid ``"locale": "en-EN"`` sent to the similarity report viewer launch payload; now
   sends the valid ``"en-US"``.
+* Change ``submitter_default_permission_set`` from ``"INSTRUCTOR"`` to ``"LEARNER"`` in the
+  Create Submission payload. In the ORA flow the learner is both owner and submitter, so
+  granting an instructor permission set to the submitter role was inconsistent with who was
+  actually being granted it.
 
 0.3.0 - 2024-05-09
 **********************************************
