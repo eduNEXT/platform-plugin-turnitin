@@ -32,6 +32,11 @@ Fixed
   upload branch. Non-upload calls (create submission, get info, generate report, viewer URL,
   EULA) previously had no timeout at all and could hang a Celery worker or web request
   indefinitely.
+* URL-encode the uploaded filename (via ``urllib.parse.quote``) before interpolating it into the
+  ``Content-Disposition`` header sent to Turnitin. Previously the raw filename was embedded
+  unencoded inside the quoted header value, which broke on filenames containing quotes, spaces,
+  or non-ASCII characters (e.g. the synthesised ``Student's Text Response Part N.txt`` name, or
+  learner-uploaded filenames with accented characters).
 * Fix invalid ``"locale": "en-EN"`` sent to the similarity report viewer launch payload; now
   sends the valid ``"en-US"``.
 

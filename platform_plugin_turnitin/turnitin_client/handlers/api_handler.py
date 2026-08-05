@@ -3,6 +3,7 @@ API handlers for turnitin integration
 """
 
 from typing import Dict, Optional
+from urllib.parse import quote
 
 import requests
 from django.conf import settings
@@ -69,7 +70,7 @@ def turnitin_api_handler(
 
     if is_upload:
         headers["Content-Type"] = "binary/octet-stream"
-        headers["Content-Disposition"] = f'inline; filename="{uploaded_file.name}"'
+        headers["Content-Disposition"] = f'inline; filename="{quote(uploaded_file.name)}"'
         response = requests.put(
             f"{TII_API_URL}/api/v1/{url_prefix}",
             headers=headers,
