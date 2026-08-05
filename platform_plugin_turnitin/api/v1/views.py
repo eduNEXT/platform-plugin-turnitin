@@ -19,6 +19,7 @@ from platform_plugin_turnitin.constants import SECONDS_TO_WAIT_BETWEEN_SUBMISSIO
 from platform_plugin_turnitin.edxapp_wrapper import BearerAuthenticationAllowInactiveUser
 from platform_plugin_turnitin.models import TurnitinSubmission
 from platform_plugin_turnitin.turnitin_client.handlers import (
+    get_eula_acceptance_by_user,
     get_similarity_report_info,
     get_submission_info,
     post_accept_eula_version,
@@ -53,6 +54,9 @@ class TurnitinUploadFileAPIView(GenericAPIView):
 
             * 404: The course is not found.
 
+            * 451: The user has not yet accepted the Turnitin EULA. Call the accept-eula
+              endpoint first.
+
             * 200: The file was successfully uploaded to Turnitin.
     """
 
@@ -67,6 +71,9 @@ class TurnitinUploadFileAPIView(GenericAPIView):
     ) -> Response:
         """
         Handle the upload of the user's file to Turnitin.
+
+        Requires the user to have already accepted the Turnitin EULA (see
+        `TurnitinAcceptEulaAPIView`); this endpoint no longer accepts it on their behalf.
         """
         if response := validate_request(request, course_id, only_course=True):
             return response
@@ -80,12 +87,56 @@ class TurnitinUploadFileAPIView(GenericAPIView):
             )
 
         turnitin_client = TurnitinClient(request.user, uploaded_file, group_context=course_id)
-        agreement_response = turnitin_client.accept_eula_agreement()
+
+        return turnitin_client.upload_turnitin_submission_file(ora_submission_id)
+
+
+class TurnitinAcceptEulaAPIView(GenericAPIView):
+    """
+    API view for a learner to explicitly accept the Turnitin EULA.
+
+    This is meant to be called by the frontend (e.g. the pipeline step rendered on the ORA
+    submission page) once the learner has actually seen and agreed to Turnitin's EULA, so that
+    acceptance reflects a real, explicit action rather than being assumed by the backend at
+    upload time.
+
+    `Example Requests`:
+
+        * POST platform-plugin-turnitin/{course_id}/api/v1/accept-eula/
+
+            * Path Parameters:
+                * course_id (str): The unique identifier for the course (required).
+
+    `Example Response`:
+
+        * POST platform-plugin-turnitin/{course_id}/api/v1/accept-eula/
+
+            * 400: The supplied course_id key is not valid, or Turnitin rejected the request.
+
+            * 404: The course is not found.
+
+            * 200: The EULA acceptance was recorded in Turnitin.
+    """
+
+    authentication_classes = (
+        BearerAuthenticationAllowInactiveUser,
+        SessionAuthenticationAllowInactiveUser,
+    )
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request: Request, course_id: str) -> Response:
+        """
+        Record the requesting user's acceptance of the Turnitin EULA.
+        """
+        if response := validate_request(request, course_id, only_course=True):
+            return response
+
+        agreement_response = TurnitinClient(request.user).accept_eula_agreement()
 
         if not agreement_response.ok:
             return api_error(agreement_response.json(), agreement_response.status_code)
 
-        return turnitin_client.upload_turnitin_submission_file(ora_submission_id)
+        return Response(status=status.HTTP_200_OK)
 
 
 class TurnitinSubmissionAPIView(GenericAPIView):
@@ -297,8 +348,10 @@ class TurnitinClient:
     Methods:
         accept_eula_agreement():
             Submit acceptance of the End-User License Agreement (EULA) for the current user.
+        has_accepted_eula():
+            Check whether Turnitin has a record of this user's EULA acceptance.
         upload_turnitin_submission_file(ora_submission_id: str):
-            Handle the upload of the user's file to Turnitin.
+            Handle the upload of the user's file to Turnitin. Requires prior EULA acceptance.
         create_turnitin_submission_object():
             Create a Turnitin submission object based on the user's data.
         get_submission_status(ora_submission_id: str):
@@ -332,17 +385,48 @@ class TurnitinClient:
         }
         return post_accept_eula_version(payload)
 
+    def has_accepted_eula(self) -> bool:
+        """
+        Check whether Turnitin has a record of this user's EULA acceptance.
+
+        Retries a few times on failure before concluding the user has not accepted, since a
+        network blip on the check itself shouldn't be treated the same as a real "not accepted".
+
+        Returns:
+            bool: True if Turnitin confirms this user has accepted its EULA.
+        """
+        response = get_eula_acceptance_by_user(str(self.user.id))
+
+        for attempt in range(1, SUBMISSION_RETRY_ATTEMPTS):
+            if response.ok:
+                break
+            log.info(f"Retrying EULA acceptance check for user [{self.user.id}] (attempt {attempt}).")
+            sleep(SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES)
+            response = get_eula_acceptance_by_user(str(self.user.id))
+
+        return response.ok
+
     def upload_turnitin_submission_file(self, ora_submission_id: str) -> Response:
         """
         Handle the upload of the user's file to Turnitin.
+
+        Requires the user to have already explicitly accepted the Turnitin EULA (see
+        `has_accepted_eula`); this method no longer accepts it on the user's behalf.
 
         Args:
             ora_submission_id (str): The unique identifier for the submission in
                 the Open Response Assessment (ORA) system.
 
         Returns:
-            Response: The response after uploading the file to Turnitin.
+            Response: The response after uploading the file to Turnitin, or a 451 response if
+                the user has not accepted the EULA yet.
         """
+        if not self.has_accepted_eula():
+            return Response(
+                {"error": "The Turnitin EULA has not been accepted by this user yet."},
+                status=status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS,
+            )
+
         turnitin_submission = self.create_turnitin_submission_object()
 
         if turnitin_submission.status_code == status.HTTP_201_CREATED:

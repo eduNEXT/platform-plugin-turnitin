@@ -185,8 +185,18 @@ Then, you are ready to use the API. The next endpoints are available:
 Learners endpoints
 ==================
 
+- POST ``<lms_host>/platform-plugin-turnitin/<course_id>/api/v1/accept-eula/``:
+  Record the requesting user's acceptance of the Turnitin EULA. Must be called, and succeed,
+  before ``upload-file`` will accept a submission for that user — see `EULA Display and
+  Acceptance`_.
+
+  **Path parameters**
+
+  - ``course_id``: ID of the course.
+
 - POST ``<lms_host>/platform-plugin-turnitin/<course_id>/api/v1/upload-file/<ora_submission_id>/``:
-  Upload a file to Turnitin.
+  Upload a file to Turnitin. Returns ``451 Unavailable For Legal Reasons`` if the user has not
+  called ``accept-eula`` successfully first.
 
   **Path parameters**
 
@@ -299,50 +309,36 @@ it does not own the page where a learner submits their ORA response — that
 page is rendered by `edx-ora2`_, a separate, independently-versioned
 component of the Open edX platform.
 
-At submission time, the ``ORASubmissionViewTurnitinWarning`` filter
-(configured above) adds a static notice next to the "Submit" button: a
-sentence stating the work will be sent to Turnitin, with a link to Turnitin's
-EULA, and a statement that submitting the response constitutes acceptance.
-The backend then calls Turnitin's ``POST /eula/{version}/accept`` on the
-learner's behalf at upload time, unconditionally.
+The ``ORASubmissionViewTurnitinWarning`` filter (configured above) is a
+**stock, unmodified Open edX Filter extension point already present in
+upstream edx-ora2** — not a patch or fork. It hands the filter pipeline full
+control over the entire submission-step template and its rendering context,
+which is enough to add real consent capture without touching ``edx-ora2``
+itself. Concretely:
 
-This is a minimal, defensible starting point, but it is **not** Turnitin's
-documented EULA workflow (fetch the current version, render it, capture
-explicit acceptance, *then* call the accept endpoint). If you're presenting
-this integration for certification or a compliance review, say so plainly
-rather than letting it be discovered.
+- The filter injects a notice next to the "Submit" button (a link to
+  Turnitin's EULA) alongside a required checkbox. The "Submit" button starts
+  disabled.
+- Checking the box calls this plugin's own ``accept-eula`` endpoint
+  (``POST .../api/v1/accept-eula/``), which records the learner's acceptance
+  with Turnitin via ``POST /eula/{version}/accept``. Only on success is the
+  "Submit" button enabled.
+- The backend **no longer accepts the EULA on the learner's behalf**. Both
+  upload paths (the direct REST endpoint and the Celery/ORA event path) check
+  Turnitin's own "check prior acceptance" record
+  (``GET /eula/v1beta/accept/{user_id}``, via ``has_accepted_eula()``) before
+  proceeding, and refuse with ``451 Unavailable For Legal Reasons`` if there's
+  no record of acceptance for that learner.
 
-Why this isn't a simple fix, and what actually is achievable
-==============================================================
-
-Showing the learner the *actual* EULA text and capturing a real, explicit
-acceptance has to happen on the ORA submission page — which is
-``edx-ora2`` code, not this plugin's. That could mean a maintained fork or
-patch of ``edx-ora2`` is needed for some approaches.
-
-There's a narrower path, though: the Open edX Filter this plugin already uses
-(``org.openedx.learning.ora.submission_view.render.started.v1``) is a
-**stock, unmodified extension point already present in upstream edx-ora2**,
-not a patch. It hands the filter pipeline full control over the entire
-submission-step template *and* its rendering context, evaluated as Python
-before any HTML is generated. In principle, this plugin's filter step could
-fetch the live EULA text from Turnitin and render it inline, and add a
-required checkbox — all without forking or patching ``edx-ora2``.
-
-A checkbox enforced only in the browser isn't real consent capture, though —
-it can be bypassed. Making it real means the backend has to stop assuming
-acceptance and instead require an explicit signal before it proceeds, for
-example:
-
-- The submission-page JS calls a dedicated acceptance endpoint before the
-  real upload is allowed to start, or
-- The backend checks Turnitin's own "check prior acceptance" endpoint
-  (``GET /eula/v1beta/accept/{user_id}``, already wrapped in
-  ``turnitin_client/handlers/eula.py`` as ``get_eula_acceptance_by_user`` but
-  currently unused) before calling ``accept_eula_agreement`` itself.
-
-None of this is implemented yet. See ``CHANGELOG.rst`` and the project's
-issue tracker for current status.
+What this is **not** yet: the full documented workflow also calls for
+fetching and rendering the actual EULA *content* inline (``GET
+/eula/{version}/view``) rather than linking out to it, and for using
+``GET /eula/latest`` rather than a hardcoded EULA version. Those handlers
+exist in ``turnitin_client/handlers/eula.py`` already; wiring them in is the
+next step, using the same filter mechanism described above. If you're
+presenting this integration for certification or a compliance review, be
+upfront about exactly this state — real consent capture, static EULA text
+display — rather than letting it be discovered.
 
 .. _edx-ora2: https://github.com/openedx/edx-ora2
 

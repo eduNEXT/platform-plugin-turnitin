@@ -77,8 +77,10 @@ class TestTurnitinClient(TestCase):
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinSubmission")
     @patch(f"{VIEWS_MODULE_PATH}.Response")
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.create_turnitin_submission_object")
+    @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.has_accepted_eula")
     def test_upload_turnitin_submission_file_success(
         self,
+        mock_has_accepted_eula: Mock,
         mock_create_turnitin_submission: Mock,
         mock_response: Mock,
         mock_model: Mock,
@@ -93,6 +95,7 @@ class TestTurnitinClient(TestCase):
             - `put_upload_submission_file_content` function is called with the correct parameters
             - `upload_turnitin_submission_file` method returns the correct response.
         """
+        mock_has_accepted_eula.return_value = True
         mock_create_turnitin_submission.return_value = Mock(
             status_code=status.HTTP_201_CREATED,
             json=Mock(return_value={"id": self.turnitin_submission_id}),
@@ -118,8 +121,10 @@ class TestTurnitinClient(TestCase):
     @patch(f"{VIEWS_MODULE_PATH}.put_upload_submission_file_content")
     @patch(f"{VIEWS_MODULE_PATH}.Response")
     @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.create_turnitin_submission_object")
+    @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.has_accepted_eula")
     def test_upload_turnitin_submission_file_error(
         self,
+        mock_has_accepted_eula: Mock,
         mock_create_turnitin_submission: Mock,
         mock_response: Mock,
         mock_put_upload_file: Mock,
@@ -132,6 +137,7 @@ class TestTurnitinClient(TestCase):
             - `put_upload_submission_file_content` function is not called
             - `upload_turnitin_submission_file` method returns the correct response.
         """
+        mock_has_accepted_eula.return_value = True
         mock_create_turnitin_submission.return_value = Mock(
             status_code=status.HTTP_400_BAD_REQUEST,
             json=Mock(return_value={"error": "Bad request"}),
@@ -147,6 +153,78 @@ class TestTurnitinClient(TestCase):
             mock_create_turnitin_submission.return_value.json()
         )
         self.assertEqual(result, mock_response.return_value)
+
+    @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.create_turnitin_submission_object")
+    @patch(f"{VIEWS_MODULE_PATH}.TurnitinClient.has_accepted_eula")
+    def test_upload_turnitin_submission_file_eula_not_accepted(
+        self, mock_has_accepted_eula: Mock, mock_create_turnitin_submission: Mock
+    ):
+        """
+        Test the `upload_turnitin_submission_file` method when the EULA has not been accepted.
+
+        Expected result:
+            - `create_turnitin_submission_object` is not called.
+            - The response has a 451 status code.
+        """
+        mock_has_accepted_eula.return_value = False
+
+        result = self.turnitin_client.upload_turnitin_submission_file(
+            self.ora_submission_id
+        )
+
+        mock_create_turnitin_submission.assert_not_called()
+        self.assertEqual(result.status_code, status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS)
+
+    @patch(f"{VIEWS_MODULE_PATH}.get_eula_acceptance_by_user")
+    def test_has_accepted_eula_true(self, mock_get_eula_acceptance: Mock):
+        """
+        Test the `has_accepted_eula` method when Turnitin confirms acceptance.
+
+        Expected result: The method returns True.
+        """
+        mock_get_eula_acceptance.return_value = Mock(ok=True)
+
+        result = self.turnitin_client.has_accepted_eula()
+
+        self.assertTrue(result)
+        mock_get_eula_acceptance.assert_called_once_with(str(self.user.id))
+
+    @patch(f"{VIEWS_MODULE_PATH}.sleep")
+    @patch(f"{VIEWS_MODULE_PATH}.get_eula_acceptance_by_user")
+    def test_has_accepted_eula_persistent_failure(
+        self, mock_get_eula_acceptance: Mock, mock_sleep: Mock
+    ):
+        """
+        Test the `has_accepted_eula` method when Turnitin never confirms acceptance.
+
+        Expected result:
+            - The method returns False after retrying `SUBMISSION_RETRY_ATTEMPTS` times.
+        """
+        mock_get_eula_acceptance.return_value = Mock(ok=False)
+
+        result = self.turnitin_client.has_accepted_eula()
+
+        self.assertFalse(result)
+        self.assertEqual(mock_get_eula_acceptance.call_count, SUBMISSION_RETRY_ATTEMPTS)
+        self.assertEqual(mock_sleep.call_count, SUBMISSION_RETRY_ATTEMPTS - 1)
+
+    @patch(f"{VIEWS_MODULE_PATH}.sleep")
+    @patch(f"{VIEWS_MODULE_PATH}.get_eula_acceptance_by_user")
+    def test_has_accepted_eula_recovers_after_retry(
+        self, mock_get_eula_acceptance: Mock, mock_sleep: Mock
+    ):
+        """
+        Test the `has_accepted_eula` method recovers after a transient check failure.
+
+        Expected result: The method returns True once the check succeeds on retry.
+        """
+        mock_get_eula_acceptance.side_effect = [Mock(ok=False), Mock(ok=True)]
+
+        result = self.turnitin_client.has_accepted_eula()
+
+        self.assertTrue(result)
+        self.assertEqual(mock_get_eula_acceptance.call_count, 2)
+        mock_sleep.assert_called_once()
 
     @patch(f"{VIEWS_MODULE_PATH}.get_current_datetime")
     @patch(f"{VIEWS_MODULE_PATH}.post_create_submission")

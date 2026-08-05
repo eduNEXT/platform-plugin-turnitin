@@ -13,7 +13,9 @@ class TestORASubmissionViewTurnitinWarning(TestCase):
 
     def setUp(self) -> None:
         self.pipeline_step = ORASubmissionViewTurnitinWarning(filter_type=Mock(), running_pipeline=Mock())
-        self.context = {"key": "value", "xblock_id": "test_xblock_id"}
+        self.xblock_id = "block-v1:edX+DemoX+Demo_Course+type@openassessment+block@abc123"
+        self.course_id = "course-v1:edX+DemoX+Demo_Course"
+        self.context = {"key": "value", "xblock_id": self.xblock_id}
         self.template_name = "template_name"
         self.new_template_name = "turnitin/oa_response.html"
 
@@ -41,7 +43,11 @@ class TestORASubmissionViewTurnitinWarning(TestCase):
         """
         result = self.pipeline_step.run_filter(self.context, self.template_name)
 
-        self.assertEqual(result["context"], self.context)
+        self.assertEqual(result["context"]["key"], "value")
+        self.assertEqual(
+            result["context"]["turnitin_accept_eula_url"],
+            f"/platform-plugin-turnitin/{self.course_id}/api/v1/accept-eula/",
+        )
         self.assertEqual(result["template_name"], self.new_template_name)
         mock_enabled_in_course.assert_not_called()
 
@@ -56,5 +62,9 @@ class TestORASubmissionViewTurnitinWarning(TestCase):
 
         result = self.pipeline_step.run_filter(self.context, self.template_name)
 
-        self.assertEqual(result["context"], self.context)
+        self.assertEqual(result["context"]["key"], "value")
+        self.assertEqual(
+            result["context"]["turnitin_accept_eula_url"],
+            f"/platform-plugin-turnitin/{self.course_id}/api/v1/accept-eula/",
+        )
         self.assertEqual(result["template_name"], self.new_template_name)

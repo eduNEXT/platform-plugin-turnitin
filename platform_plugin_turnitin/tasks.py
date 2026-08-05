@@ -136,7 +136,9 @@ def upload_turnitin_submission(ora_submission_uuid: str, user, file, block_id: s
     """
     Create a new submission in Turnitin.
 
-    First, the user must accept the EULA agreement. Then, the file is uploaded to Turnitin.
+    The user must have already explicitly accepted the Turnitin EULA (via the accept-eula
+    endpoint, called from the ORA submission page) before this runs; it no longer accepts the
+    EULA on the user's behalf.
 
     Args:
         ora_submission_uuid (str): The ORA submission UUID.
@@ -148,19 +150,10 @@ def upload_turnitin_submission(ora_submission_uuid: str, user, file, block_id: s
     group_context = str(UsageKey.from_string(block_id).course_key)
     turnitin_client = TurnitinClient(user, file, group=block_id, group_context=group_context)
 
-    agreement_response = turnitin_client.accept_eula_agreement()
+    response = turnitin_client.upload_turnitin_submission_file(ora_submission_uuid)
 
-    for attempt in range(1, SUBMISSION_RETRY_ATTEMPTS):
-        if agreement_response.ok:
-            break
-        log.info(f"Retrying EULA agreement acceptance for submission [{ora_submission_uuid}] (attempt {attempt}).")
-        sleep(SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES)
-        agreement_response = turnitin_client.accept_eula_agreement()
-
-    if not agreement_response.ok:
-        raise Exception("Failed to accept the EULA agreement.")
-
-    turnitin_client.upload_turnitin_submission_file(ora_submission_uuid)
+    if response.status_code == status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS:
+        raise Exception(f"Cannot upload submission [{ora_submission_uuid}]: the user has not accepted the EULA.")
 
 
 def is_submission_complete(ora_submission_uuid: str, user) -> bool:

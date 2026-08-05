@@ -258,64 +258,39 @@ class TestOraSubmissionCreatedTask(TestCase):
         Test the `upload_turnitin_submission` function.
 
         Expected result:
-            - `TurnitinClient` is called once with the user and file.
-            - `accept_eula_agreement` is called once.
+            - `TurnitinClient` is called once with the user, file, group and group_context.
             - `upload_turnitin_submission_file` is called once with the submission_id.
+            - No exception is raised.
         """
         mock_turnitin_client_instance = mock_turnitin_client.return_value
-        mock_turnitin_client_instance.accept_eula_agreement.return_value.ok = True
+        mock_turnitin_client_instance.upload_turnitin_submission_file.return_value = Mock(
+            status_code=status.HTTP_200_OK
+        )
 
         upload_turnitin_submission(self.submission_uuid, self.user, self.file, self.block_id)
 
         mock_turnitin_client.assert_called_once_with(
             self.user, self.file, group=self.block_id, group_context=self.course_id
         )
-        mock_turnitin_client_instance.accept_eula_agreement.assert_called_once()
         mock_turnitin_client_instance.upload_turnitin_submission_file.assert_called_once_with(self.submission_uuid)
 
-    @patch(f"{TASKS_MODULE_PATH}.sleep")
     @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
-    def test_upload_turnitin_submission_eula_failure(self, mock_turnitin_client: Mock, mock_sleep: Mock):
+    def test_upload_turnitin_submission_eula_not_accepted(self, mock_turnitin_client: Mock):
         """
-        Test the `upload_turnitin_submission` function with a persistent failure to accept the EULA agreement.
+        Test the `upload_turnitin_submission` function when the user has not accepted the EULA.
 
         Expected result:
-            - An exception is raised with the correct message after exhausting retries.
-            - `TurnitinClient` is called once with the user and file.
-            - `accept_eula_agreement` is retried `SUBMISSION_RETRY_ATTEMPTS` times.
-            - `upload_turnitin_submission_file` is not called.
+            - An exception is raised with a clear message.
         """
         mock_turnitin_client_instance = mock_turnitin_client.return_value
-        mock_turnitin_client_instance.accept_eula_agreement.return_value.ok = False
+        mock_turnitin_client_instance.upload_turnitin_submission_file.return_value = Mock(
+            status_code=status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS
+        )
 
         with self.assertRaises(Exception) as context:
             upload_turnitin_submission(self.submission_uuid, self.user, self.file, self.block_id)
 
-        self.assertEqual("Failed to accept the EULA agreement.", str(context.exception))
-        mock_turnitin_client.assert_called_once_with(
-            self.user, self.file, group=self.block_id, group_context=self.course_id
-        )
-        self.assertEqual(mock_turnitin_client_instance.accept_eula_agreement.call_count, SUBMISSION_RETRY_ATTEMPTS)
-        self.assertEqual(mock_sleep.call_count, SUBMISSION_RETRY_ATTEMPTS - 1)
-        mock_turnitin_client_instance.upload_turnitin_submission_file.assert_not_called()
-
-    @patch(f"{TASKS_MODULE_PATH}.sleep")
-    @patch(f"{TASKS_MODULE_PATH}.TurnitinClient")
-    def test_upload_turnitin_submission_recovers_after_retry(self, mock_turnitin_client: Mock, mock_sleep: Mock):
-        """
-        Test the `upload_turnitin_submission` function recovers after a transient EULA acceptance failure.
-
-        Expected result:
-            - `upload_turnitin_submission_file` is called once the EULA agreement is accepted on retry.
-        """
-        mock_turnitin_client_instance = mock_turnitin_client.return_value
-        mock_turnitin_client_instance.accept_eula_agreement.side_effect = [Mock(ok=False), Mock(ok=True)]
-
-        upload_turnitin_submission(self.submission_uuid, self.user, self.file, self.block_id)
-
-        self.assertEqual(mock_turnitin_client_instance.accept_eula_agreement.call_count, 2)
-        mock_sleep.assert_called_once()
-        mock_turnitin_client_instance.upload_turnitin_submission_file.assert_called_once_with(self.submission_uuid)
+        self.assertIn("has not accepted the EULA", str(context.exception))
 
     @patch(f"{TASKS_MODULE_PATH}.get_submission_status")
     @patch(f"{TASKS_MODULE_PATH}.log.info")

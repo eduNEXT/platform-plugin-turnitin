@@ -17,27 +17,41 @@ Unreleased
 Documentation
 =============
 
-* Add an "EULA Display and Acceptance" section to the README explaining what the plugin
-  currently does (a static notice, auto-accepted on the learner's behalf), why the full
-  documented Turnitin EULA workflow requires care given this plugin doesn't own the ORA
-  submission page, and that the Open edX Filter it already uses is a stock, unmodified
-  ``edx-ora2`` extension point — not a patch — capable of rendering the actual EULA content
-  and a real consent checkbox without forking ``edx-ora2``. Deploying this plugin means the
-  operator is responsible for complying with Turnitin's EULA display requirements.
+* Add an "EULA Display and Acceptance" section to the README explaining what the plugin does
+  (a required consent checkbox on the ORA submission page, backed by a real acceptance check —
+  see Changed, below), what it doesn't do yet (rendering the actual EULA text inline instead of
+  linking out to it), and that the Open edX Filter it uses is a stock, unmodified ``edx-ora2``
+  extension point, not a patch. Deploying this plugin means the operator is responsible for
+  complying with Turnitin's EULA display requirements.
+
+Changed
+=======
+
+* **Breaking:** stop accepting the Turnitin EULA on the learner's behalf. Both upload paths (the
+  ``upload-file`` REST endpoint and the Celery/ORA event path) now call
+  ``TurnitinClient.has_accepted_eula()`` — which checks Turnitin's own
+  ``GET /eula/v1beta/accept/{user_id}`` record via the previously-unused
+  ``get_eula_acceptance_by_user`` handler — before proceeding, and refuse with
+  ``451 Unavailable For Legal Reasons`` if there's no record of acceptance. A new
+  ``POST .../api/v1/accept-eula/`` endpoint lets the frontend record acceptance explicitly; the
+  ``ORASubmissionViewTurnitinWarning`` filter's template now renders a required checkbox that
+  calls it before enabling the "Submit" button. Any caller integrating directly against the
+  ``upload-file`` endpoint must call ``accept-eula`` first — this is intentionally a breaking
+  change to close the compliance gap of assuming consent nobody explicitly gave.
 
 Added
 =====
 
 * Retry, with a short wait between attempts, the points that previously raised an unrecoverable
   exception (or silently failed) on the first failure: downloading a learner's uploaded file
-  from the LMS, accepting the Turnitin EULA on the learner's behalf (``tasks.py``), and creating
-  the Turnitin submission object itself (``TurnitinClient.create_turnitin_submission_object()``,
-  shared by both the Celery/ORA path and the direct upload REST endpoint). All three now retry
-  up to ``SUBMISSION_RETRY_ATTEMPTS`` times (default 3), waiting
-  ``SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES`` seconds (default 5) between attempts, so a
-  transient network blip no longer aborts the whole submission and requires a learner to
-  manually resubmit. This does not change the report-generation polling loop, add webhooks, or
-  add bulk resubmit — those remain roadmap items.
+  from the LMS, checking whether the user has accepted the Turnitin EULA
+  (``TurnitinClient.has_accepted_eula()``), and creating the Turnitin submission object itself
+  (``TurnitinClient.create_turnitin_submission_object()``, shared by both the Celery/ORA path
+  and the direct upload REST endpoint). All three now retry up to ``SUBMISSION_RETRY_ATTEMPTS``
+  times (default 3), waiting ``SECONDS_TO_WAIT_BETWEEN_SUBMISSION_RETRIES`` seconds (default 5)
+  between attempts, so a transient network blip no longer aborts the whole submission and
+  requires a learner to manually resubmit. This does not change the report-generation polling
+  loop, add webhooks, or add bulk resubmit — those remain roadmap items.
 * Send ``group`` (the ORA assignment's XBlock usage key) and ``group_context`` (its course key)
   in the Create Submission payload's ``metadata``, so submissions can be grouped in Turnitin by
   assignment and course. ``TurnitinClient`` gained optional ``group``/``group_context``
