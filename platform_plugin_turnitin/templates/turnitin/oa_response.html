@@ -327,23 +327,96 @@
                         <span class="icon fa fa-exclamation-triangle"></span>
                         {% blocktrans %}
                           The response text and files related to your response will be sent to Turnitin for a plagiarism check.
-                          Please read <a href="https://www.turnitin.com/agreement.asp" target="_blank">Turnitin's EULA</a>
-                          before submitting, as by doing so, you are explicitly accepting the agreement.
                         {% endblocktrans %}
                       </p>
+                      {% if turnitin_eula_content %}
+                        {# Turnitin's own EULA content, fetched from their API; rendered as-is. #}
+                        <div class="turnitin_eula__content" style="max-height: 12em; overflow-y: auto; border: 1px solid #ccc; padding: 0.5em; margin-bottom: 0.5em;">
+                          {{ turnitin_eula_content|safe }}
+                        </div>
+                      {% else %}
+                        <p>
+                          {% blocktrans %}
+                            Please read <a href="https://www.turnitin.com/agreement.asp" target="_blank">Turnitin's EULA</a>
+                            before submitting.
+                          {% endblocktrans %}
+                        </p>
+                      {% endif %}
+                      <p class="turnitin_eula__error" id="turnitin_eula_error__{{ xblock_id }}" style="display: none;">
+                        {% trans "We could not record your EULA acceptance. Please try again." %}
+                      </p>
+                      <label for="turnitin_eula_checkbox__{{ xblock_id }}">
+                        <input type="checkbox" id="turnitin_eula_checkbox__{{ xblock_id }}" class="turnitin_eula__checkbox">
+                        {% trans "I have read and accept Turnitin's EULA." %}
+                      </label>
                 </div>
 
                 <ul class="list list--actions">
                     <li class="list--actions__item">
                         <button type="submit" class="action action--submit step--response__submit"
+                                id="turnitin_submit__{{ xblock_id }}"
                                 text_response="{{text_response}}"
                                 file_upload_response="{{file_upload_response}}"
                                 allow_learner_resubmissions="{{allow_learner_resubmissions}}"
+                                disabled
                                 >
                             {% trans "Submit your response and move to the next step" %}
                         </button>
                     </li>
                 </ul>
+                <script>
+                (function () {
+                    var checkbox = document.getElementById("turnitin_eula_checkbox__{{ xblock_id }}");
+                    var submitButton = document.getElementById("turnitin_submit__{{ xblock_id }}");
+                    var errorMessage = document.getElementById("turnitin_eula_error__{{ xblock_id }}");
+                    var acceptUrl = "{{ turnitin_accept_eula_url }}";
+
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie !== "") {
+                            var cookies = document.cookie.split(";");
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === name + "=") {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (checkbox && submitButton) {
+                        checkbox.addEventListener("change", function () {
+                            if (!checkbox.checked) {
+                                submitButton.disabled = true;
+                                return;
+                            }
+
+                            checkbox.disabled = true;
+                            errorMessage.style.display = "none";
+
+                            fetch(acceptUrl, {
+                                method: "POST",
+                                headers: {"X-CSRFToken": getCookie("csrftoken")},
+                                credentials: "same-origin",
+                            }).then(function (response) {
+                                checkbox.disabled = false;
+                                if (response.ok) {
+                                    submitButton.disabled = false;
+                                } else {
+                                    checkbox.checked = false;
+                                    errorMessage.style.display = "block";
+                                }
+                            }).catch(function () {
+                                checkbox.disabled = false;
+                                checkbox.checked = false;
+                                errorMessage.style.display = "block";
+                            });
+                        });
+                    }
+                })();
+                </script>
             </div>
             <div class="step--response__dialog-confirm dialog-confirm">
               <p class="dialog-text"></p>

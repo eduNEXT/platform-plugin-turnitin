@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.urls import reverse
 from rest_framework import status
@@ -9,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 
 from platform_plugin_turnitin.api.v1.views import (
+    TurnitinAcceptEulaAPIView,
     TurnitinSimilarityReportAPIView,
     TurnitinSubmissionAPIView,
     TurnitinUploadFileAPIView,
@@ -110,12 +112,22 @@ class TurnitinUploadFileAPIViewTest(TurnitinAPITestMixin):
         super().setUp()
         self.view = TurnitinUploadFileAPIView.as_view()
 
-    def post_response(self) -> HttpResponse:
-        """Return the post response from the view."""
-        return self.response(self.view, "POST", "turnitin-api:v1:upload-file")
+    def post_response(self, file_name: str = "submission.pdf") -> HttpResponse:
+        """Return the post response from the view, uploading a file with the given name."""
+        url = reverse(
+            "turnitin-api:v1:upload-file",
+            kwargs={"ora_submission_id": self.ora_submission_id},
+        )
+        uploaded_file = SimpleUploadedFile(file_name, b"file content")
+        request = self.factory.post(url, data={"file": uploaded_file}, format="multipart")
+        force_authenticate(request, user=self.user)
+        return self.view(
+            request,
+            course_id=self.course_id,
+            ora_submission_id=self.ora_submission_id,
+        )
 
     @upload_turnitin_submission_patch
-    @accept_eula_patch
     @course_instructor_role_patch
     @course_staff_role_patch
     @get_course_overview_patch
@@ -124,7 +136,6 @@ class TurnitinUploadFileAPIViewTest(TurnitinAPITestMixin):
         get_course_overview_mock: Mock,
         course_staff_role_mock: Mock,
         course_instructor_role_mock: Mock,
-        accept_eula_mock: Mock,
         upload_turnitin_submission_mock: Mock,
     ):
         """
@@ -135,7 +146,6 @@ class TurnitinUploadFileAPIViewTest(TurnitinAPITestMixin):
         get_course_overview_mock.return_value = self.course
         course_staff_role_mock.return_value.has_user.return_value = True
         course_instructor_role_mock.return_value.has_user.return_value = True
-        accept_eula_mock.return_value = Mock(ok=True)
         upload_turnitin_submission_mock.return_value = Response(
             status=status.HTTP_200_OK
         )
@@ -144,35 +154,59 @@ class TurnitinUploadFileAPIViewTest(TurnitinAPITestMixin):
 
         self.assertEqual(result.status_code, status.HTTP_200_OK)
 
-    @accept_eula_patch
+    @upload_turnitin_submission_patch
     @course_instructor_role_patch
     @course_staff_role_patch
     @get_course_overview_patch
-    def test_upload_file_accept_eula_error(
+    def test_upload_file_eula_not_accepted(
         self,
         get_course_overview_mock: Mock,
         course_staff_role_mock: Mock,
         course_instructor_role_mock: Mock,
-        accept_eula_mock: Mock,
+        upload_turnitin_submission_mock: Mock,
     ):
         """
-        Test the upload file view when the EULA is not accepted.
+        Test the upload file view when the user has not accepted the Turnitin EULA yet.
+
+        Expected result: The response status code is 451.
+        """
+        get_course_overview_mock.return_value = self.course
+        course_staff_role_mock.return_value.has_user.return_value = True
+        course_instructor_role_mock.return_value.has_user.return_value = True
+        upload_turnitin_submission_mock.return_value = Response(
+            {"error": "The Turnitin EULA has not been accepted by this user yet."},
+            status=status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS,
+        )
+
+        result = self.post_response()
+
+        self.assertEqual(result.status_code, status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS)
+
+    @course_instructor_role_patch
+    @course_staff_role_patch
+    @get_course_overview_patch
+    def test_upload_file_unsupported_extension(
+        self,
+        get_course_overview_mock: Mock,
+        course_staff_role_mock: Mock,
+        course_instructor_role_mock: Mock,
+    ):
+        """
+        Test the upload file view when the file has an unsupported extension.
 
         Expected result: The response status code is 400.
         """
         get_course_overview_mock.return_value = self.course
         course_staff_role_mock.return_value.has_user.return_value = True
         course_instructor_role_mock.return_value.has_user.return_value = True
-        accept_eula_mock.return_value = Mock(
-            ok=False,
-            json=Mock(return_value="EULA not accepted"),
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
 
-        result = self.post_response()
+        result = self.post_response(file_name="submission.exe")
 
         self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result.data["error"], "EULA not accepted")
+        self.assertEqual(
+            result.data["field_errors"]["file"],
+            "The uploaded file has an unsupported extension.",
+        )
 
     def test_upload_file_course_key_not_valid(self):
         """
@@ -190,6 +224,101 @@ class TurnitinUploadFileAPIViewTest(TurnitinAPITestMixin):
     def test_upload_file_course_not_found(self, get_course_overview_mock: Mock):
         """
         Test the upload file view when the course is not found.
+
+        Expected result: The response status code is 404.
+        """
+        get_course_overview_mock.return_value = None
+
+        result = self.post_response()
+
+        self.course_not_found(result)
+
+
+class TurnitinAcceptEulaAPIViewTest(TurnitinAPITestMixin):
+    """Tests for the TurnitinAcceptEulaAPIView."""
+
+    def setUp(self):
+        super().setUp()
+        self.view = TurnitinAcceptEulaAPIView.as_view()
+
+    def post_response(self) -> HttpResponse:
+        """Return the post response from the view."""
+        url = reverse("turnitin-api:v1:accept-eula")
+        request = self.factory.post(url)
+        force_authenticate(request, user=self.user)
+        return self.view(request, course_id=self.course_id)
+
+    @accept_eula_patch
+    @course_instructor_role_patch
+    @course_staff_role_patch
+    @get_course_overview_patch
+    def test_accept_eula(
+        self,
+        get_course_overview_mock: Mock,
+        course_staff_role_mock: Mock,
+        course_instructor_role_mock: Mock,
+        accept_eula_mock: Mock,
+    ):
+        """
+        Test the accept-eula view.
+
+        Expected result: The response status code is 200.
+        """
+        get_course_overview_mock.return_value = self.course
+        course_staff_role_mock.return_value.has_user.return_value = True
+        course_instructor_role_mock.return_value.has_user.return_value = True
+        accept_eula_mock.return_value = Mock(ok=True)
+
+        result = self.post_response()
+
+        self.assertEqual(result.status_code, status.HTTP_200_OK)
+
+    @accept_eula_patch
+    @course_instructor_role_patch
+    @course_staff_role_patch
+    @get_course_overview_patch
+    def test_accept_eula_error(
+        self,
+        get_course_overview_mock: Mock,
+        course_staff_role_mock: Mock,
+        course_instructor_role_mock: Mock,
+        accept_eula_mock: Mock,
+    ):
+        """
+        Test the accept-eula view when Turnitin rejects the request.
+
+        Expected result: The response status code matches Turnitin's error response.
+        """
+        get_course_overview_mock.return_value = self.course
+        course_staff_role_mock.return_value.has_user.return_value = True
+        course_instructor_role_mock.return_value.has_user.return_value = True
+        accept_eula_mock.return_value = Mock(
+            ok=False,
+            json=Mock(return_value="EULA not accepted"),
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+        result = self.post_response()
+
+        self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result.data["error"], "EULA not accepted")
+
+    def test_accept_eula_course_key_not_valid(self):
+        """
+        Test the accept-eula view when the course key is not valid.
+
+        Expected result: The response status code is 400.
+        """
+        self.course_id = "course-v1+not-valid+Demo_Course"
+
+        result = self.post_response()
+
+        self.course_key_not_valid(result)
+
+    @get_course_overview_patch
+    def test_accept_eula_course_not_found(self, get_course_overview_mock: Mock):
+        """
+        Test the accept-eula view when the course is not found.
 
         Expected result: The response status code is 404.
         """

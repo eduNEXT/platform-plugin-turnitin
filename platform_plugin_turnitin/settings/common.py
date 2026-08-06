@@ -6,7 +6,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.22/ref/settings/
 """
 
-from platform_plugin_turnitin import ROOT_DIRECTORY
+from platform_plugin_turnitin import ROOT_DIRECTORY, __version__
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.22/howto/deployment/checklist/
@@ -40,9 +40,15 @@ def plugin_settings(settings):
     settings.ENABLE_TURNITIN_SUBMISSION = False
     # Configuration variables
     settings.TURNITIN_TII_API_URL = None
-    settings.TURNITIN_TCA_INTEGRATION_FAMILY = None
-    settings.TURNITIN_TCA_INTEGRATION_VERSION = None
+    settings.TURNITIN_TCA_INTEGRATION_FAMILY = "Open edX"
+    settings.TURNITIN_TCA_INTEGRATION_VERSION = getattr(settings, "RELEASE_LINE", None) or (
+        f"turnitin-openedx-platform-plugin {__version__}"
+    )
     settings.TURNITIN_TCA_API_KEY = None
+    # Whether this Turnitin tenant requires EULA display/acceptance (see Turnitin's
+    # "Get Features Enabled" tenant.require_eula attribute). Defaults to True; set to False only
+    # if your tenant is confirmed not to require it.
+    settings.TURNITIN_TCA_REQUIRE_EULA = True
     settings.TURNITIN_SIMILARITY_REPORT_PAYLOAD = {
         "indexing_settings": {"add_to_index": True},
         "generation_settings": {

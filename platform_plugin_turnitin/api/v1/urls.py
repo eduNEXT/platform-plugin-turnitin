@@ -13,6 +13,11 @@ urlpatterns = [
         name="upload-file",
     ),
     path(
+        "accept-eula/",
+        views.TurnitinAcceptEulaAPIView.as_view(),
+        name="accept-eula",
+    ),
+    path(
         "submission/<uuid:ora_submission_id>/",
         views.TurnitinSubmissionAPIView.as_view(),
         name="get-submission",

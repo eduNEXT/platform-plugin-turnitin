@@ -41,6 +41,7 @@ class TestHandlers(TestCase):
             self.submission.answer.parts,
             self.submission.answer.file_names,
             self.submission.answer.file_urls,
+            self.submission.location,
         )
 
     @patch("platform_plugin_turnitin.handlers.ora_submission_created_task.delay")
@@ -57,4 +58,5 @@ class TestHandlers(TestCase):
             self.submission.answer.parts,
             self.submission.answer.file_names,
             self.submission.answer.file_urls,
+            self.submission.location,
         )

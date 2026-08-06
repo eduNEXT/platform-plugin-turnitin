@@ -19,7 +19,7 @@ def get_eula_page(version: str = "v1beta", language: str = "en-US"):
     """
     Returns the HTML content for a specified EULA version.
     """
-    response = turnitin_api_handler("get", f"/eula/{version}/view?lang={language}")
+    response = turnitin_api_handler("get", f"eula/{version}/view?lang={language}")
     return response
 
 
@@ -32,9 +32,9 @@ def post_accept_eula_version(payload, version: str = "v1beta"):
     return response
 
 
-def get_eula_acceptance_by_user(user_id):
+def get_eula_acceptance_by_user(user_id, version: str = "v1beta"):
     """
     Checks if a specific user has accepted a particular EULA version.
     """
-    response = turnitin_api_handler("get", f"eula/v1beta/accept/{user_id}")
+    response = turnitin_api_handler("get", f"eula/{version}/accept/{user_id}")
     return response

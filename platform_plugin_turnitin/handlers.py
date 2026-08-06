@@ -23,4 +23,5 @@ def ora_submission_created(submission, **kwargs):
             submission.answer.parts,
             submission.answer.file_names,
             submission.answer.file_urls,
+            submission.location,
         )

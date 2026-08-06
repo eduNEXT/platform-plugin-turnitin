@@ -64,6 +64,7 @@ TEMPLATES = [
 
 # Plugin settings
 ENABLE_TURNITIN_SUBMISSION = False
+TURNITIN_TCA_REQUIRE_EULA = True
 PLATFORM_PLUGIN_TURNITIN_AUTHENTICATION_BACKEND = (
     "platform_plugin_turnitin.edxapp_wrapper.backends.authentication_q_v1_test"
 )
