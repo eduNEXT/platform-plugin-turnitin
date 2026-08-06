@@ -11,8 +11,8 @@ Change Log
 
 .. There should always be an "Unreleased" section for changes pending release.
 
-Unreleased
-**********
+1.0.0 - 2026-08-05
+**********************************************
 
 Documentation
 =============
